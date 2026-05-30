@@ -12,4 +12,7 @@ Uso:
 2. Ejecutar el script de cálculo de puntajes.
 3. Revisar la tabla de clasificación generada.
 
+Sitio en vivo:
+- https://jofaifo.github.io/Formula-1-Puntajes-Prueba/
+
 Este repositorio es de carácter experimental y sirve como demostración de manejo sencillo de datos y generación de resultados para pruebas.
