@@ -12,7 +12,7 @@
             <div>
                 <span class="season-label">Calendario 2026</span>
                 <h1>Fechas y circuitos</h1>
-                <p>Revisa todas las rondas confirmadas y el estado de cada carrera.</p>
+                <p>Revisa todas las rondas confirmadas, ganadores y horarios en hora argentina.</p>
             </div>
             <div class="header-actions">
                 <form class="search-form" id="top-search-form">
@@ -30,29 +30,146 @@
         <section class="card schedule-card">
             <h2>Calendario de la temporada</h2>
             <ol class="calendar-list">
-                <li><strong>R1</strong> — Dom 8 mar → 🇦🇺 Australia, Melbourne ✅</li>
-                <li><strong>R2</strong> — Dom 15 mar → 🇨🇳 China, Shanghai 🏃<em>(Sprint)</em> ✅</li>
-                <li><strong>R3</strong> — Dom 29 mar → 🇯🇵 Japón, Suzuka ✅</li>
-                <li><strong>R4</strong> — Dom 3 may → 🇺🇸 Miami 🏃<em>(Sprint)</em> — <strong>14:00 hs</strong> ✅</li>
-                <li><strong>R5</strong> — Dom 24 may → 🇨🇦 Canadá, Montreal 🏃<em>(Sprint)</em> — <strong>17:00 hs</strong> ✅</li>
-                <li><strong>R6</strong> — Dom 7 jun → 🇲🇨 Mónaco 🔜 — <strong>10:00 hs</strong></li>
-                <li><strong>R7</strong> — Dom 14 jun → 🇪🇸 Barcelona-Catalunya — <strong>10:00 hs</strong> ⏳</li>
-                <li><strong>R8</strong> — Dom 28 jun → 🇦🇹 Austria, Spielberg — <strong>10:00 hs</strong> ⏳</li>
-                <li><strong>R9</strong> — Dom 5 jul → 🇬🇧 Gran Bretaña, Silverstone 🏃<em>(Sprint)</em> — <strong>11:00 hs</strong> ⏳</li>
-                <li><strong>R10</strong> — Dom 19 jul → 🇧🇪 Bélgica, Spa — <strong>10:00 hs</strong> ⏳</li>
-                <li><strong>R11</strong> — Dom 26 jul → 🇭🇺 Hungría, Budapest — <strong>10:00 hs</strong> ⏳</li>
+                <!-- R1–R5: disputadas -->
+                <li class="race-done">
+                    <span class="race-round">R1</span>
+                    <span class="race-info">Dom 8 mar · 🇦🇺 Australia, Melbourne</span>
+                    <span class="race-winner">🏆 George Russell</span>
+                    <span class="race-status done">✅</span>
+                </li>
+                <li class="race-done">
+                    <span class="race-round">R2</span>
+                    <span class="race-info">Dom 15 mar · 🇨🇳 China, Shanghai <em class="sprint-tag">Sprint</em></span>
+                    <span class="race-winner">🏆 Kimi Antonelli</span>
+                    <span class="race-status done">✅</span>
+                </li>
+                <li class="race-done">
+                    <span class="race-round">R3</span>
+                    <span class="race-info">Dom 29 mar · 🇯🇵 Japón, Suzuka</span>
+                    <span class="race-winner">🏆 Kimi Antonelli</span>
+                    <span class="race-status done">✅</span>
+                </li>
+                <li class="race-done">
+                    <span class="race-round">R4</span>
+                    <span class="race-info">Dom 3 may · 🇺🇸 Miami <em class="sprint-tag">Sprint</em> · <strong>14:00 hs ARG</strong></span>
+                    <span class="race-winner">🏆 Lando Norris</span>
+                    <span class="race-status done">✅</span>
+                </li>
+                <li class="race-done">
+                    <span class="race-round">R5</span>
+                    <span class="race-info">Dom 24 may · 🇨🇦 Canadá, Montreal <em class="sprint-tag">Sprint</em> · <strong>17:00 hs ARG</strong></span>
+                    <span class="race-winner">🏆 Kimi Antonelli</span>
+                    <span class="race-status done">✅</span>
+                </li>
+
+                <!-- R6: próxima -->
+                <li class="race-next">
+                    <span class="race-round">R6</span>
+                    <span class="race-info">Dom 7 jun · 🇲🇨 Mónaco, Montecarlo · <strong>10:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status next">🔜 PRÓXIMA</span>
+                </li>
+
+                <!-- R7–R22: pendientes -->
+                <li class="race-upcoming">
+                    <span class="race-round">R7</span>
+                    <span class="race-info">Dom 14 jun · 🇪🇸 España, Barcelona · <strong>10:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R8</span>
+                    <span class="race-info">Dom 28 jun · 🇦🇹 Austria, Spielberg · <strong>10:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R9</span>
+                    <span class="race-info">Dom 5 jul · 🇬🇧 Gran Bretaña, Silverstone <em class="sprint-tag">Sprint</em> · <strong>11:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R10</span>
+                    <span class="race-info">Dom 19 jul · 🇧🇪 Bélgica, Spa · <strong>10:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R11</span>
+                    <span class="race-info">Dom 26 jul · 🇭🇺 Hungría, Budapest · <strong>10:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+
                 <li class="summer-break">🌴 <em>Pausa de verano europeo</em></li>
-                <li><strong>R12</strong> — Dom 23 ago → 🇳🇱 Países Bajos, Zandvoort 🏃<em>(Sprint)</em> — <strong>10:00 hs</strong> ⏳</li>
-                <li><strong>R13</strong> — Dom 6 sep → 🇮🇹 Italia, Monza — <strong>10:00 hs</strong> ⏳</li>
-                <li><strong>R14</strong> — Dom 13 sep → 🇪🇸 Madrid <em>(debut)</em> — <strong>10:00 hs</strong> ⏳</li>
-                <li><strong>R15</strong> — Dom 27 sep → 🇦🇿 Azerbaiyán, Bakú — <strong>08:00 hs</strong> ⏳</li>
-                <li><strong>R16</strong> — Dom 11 oct → 🇸🇬 Singapur 🏃<em>(Sprint)</em> — <strong>09:00 hs</strong> ⏳</li>
-                <li><strong>R17</strong> — Dom 25 oct → 🇺🇸 Austin — <strong>17:00 hs</strong> ⏳</li>
-                <li><strong>R18</strong> — Dom 1 nov → 🇲🇽 México, CDMX — <strong>17:00 hs</strong> ⏳</li>
-                <li><strong>R19</strong> — Dom 8 nov → 🇧🇷 Brasil, São Paulo — <strong>14:00 hs</strong> ⏳</li>
-                <li><strong>R20</strong> — Dom 21 nov → 🇺🇸 Las Vegas — <strong>01:00 hs</strong> <em>(madrugada del lunes)</em> ⏳</li>
-                <li><strong>R21</strong> — Dom 29 nov → 🇶🇦 Qatar, Lusail — <strong>13:00 hs</strong> ⏳</li>
-                <li><strong>R22</strong> — Dom 6 dic → 🇦🇪 Abu Dhabi — <strong>10:00 hs</strong> ⏳</li>
+
+                <li class="race-upcoming">
+                    <span class="race-round">R12</span>
+                    <span class="race-info">Dom 23 ago · 🇳🇱 Países Bajos, Zandvoort <em class="sprint-tag">Sprint</em> · <strong>10:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R13</span>
+                    <span class="race-info">Dom 6 sep · 🇮🇹 Italia, Monza · <strong>10:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R14</span>
+                    <span class="race-info">Dom 13 sep · 🇪🇸 Madrid <em class="debut-tag">debut</em> · <strong>10:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R15</span>
+                    <span class="race-info">Dom 27 sep · 🇦🇿 Azerbaiyán, Bakú · <strong>08:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R16</span>
+                    <span class="race-info">Dom 11 oct · 🇸🇬 Singapur <em class="sprint-tag">Sprint</em> · <strong>09:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R17</span>
+                    <span class="race-info">Dom 25 oct · 🇺🇸 Austin · <strong>17:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R18</span>
+                    <span class="race-info">Dom 1 nov · 🇲🇽 México, CDMX · <strong>17:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R19</span>
+                    <span class="race-info">Dom 8 nov · 🇧🇷 Brasil, Interlagos · <strong>14:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming race-latenight">
+                    <span class="race-round">R20</span>
+                    <span class="race-info">Dom 21 nov · 🇺🇸 Las Vegas Strip · <strong>01:00 hs ARG</strong> <em class="latenight-tag">madrugada lunes</em></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R21</span>
+                    <span class="race-info">Dom 29 nov · 🇶🇦 Qatar, Lusail · <strong>13:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
+                <li class="race-upcoming">
+                    <span class="race-round">R22</span>
+                    <span class="race-info">Dom 6 dic · 🇦🇪 Abu Dhabi, Yas Marina · <strong>10:00 hs ARG</strong></span>
+                    <span class="race-tv">📺 Fox Sports / Disney+</span>
+                    <span class="race-status">⏳</span>
+                </li>
             </ol>
         </section>
 
