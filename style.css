@@ -7,8 +7,8 @@
     --surface-strong: #1f1f1f;
     --text-color: #f2f2f2;
     --muted: #a8a8a8;
-    --accent-color: #e10600;
-    --accent-strong: #ff4d4d;
+    --accent-color: #ff2121;
+    --accent-strong: #ff7878;
     --border-color: #2d2d2d;
 }
 
@@ -96,8 +96,8 @@ p {
 }
 
 .hero-link:hover {
-    background: rgba(225, 6, 0, 0.14);
-    border-color: rgba(225, 6, 0, 0.3);
+    background: rgba(255, 33, 33, 0.18);
+    border-color: rgba(255, 33, 33, 0.35);
 }
 
 .hero-overview {
@@ -124,6 +124,15 @@ p {
     border-radius: 16px;
     padding: 1.25rem;
     text-align: center;
+}
+
+.season-label {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-color);
 }
 
 .stat-number {
@@ -208,6 +217,7 @@ p {
 .team-alpine .logo-badge { background: linear-gradient(135deg, #0f1e58 0%, #00a0df 100%); }
 .team-williams .logo-badge { background: linear-gradient(135deg, #002e72 0%, #88d0ff 100%); }
 .team-haas .logo-badge { background: linear-gradient(135deg, #333333 0%, #d2d2d2 100%); }
+.team-audi .logo-badge { background: linear-gradient(135deg, #101820 0%, #8d8e8f 100%); }
 .team-alpha .logo-badge { background: linear-gradient(135deg, #0b1628 0%, #8b9ac1 100%); }
 .team-alfa .logo-badge { background: linear-gradient(135deg, #7a1114 0%, #ed1a24 100%); }
 .team-cadillac .logo-badge { background: linear-gradient(135deg, #004c4c 0%, #9fd7d7 100%); }
