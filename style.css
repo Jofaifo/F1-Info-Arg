@@ -1722,7 +1722,7 @@ p { margin: 0 0 1rem; color: var(--muted); }
 }
 .circuit-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 0.5rem;
     margin-bottom: 0.6rem;
 }
@@ -1864,3 +1864,122 @@ p { margin: 0 0 1rem; color: var(--muted); }
     text-align: center;
     padding: 2rem 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   BLOQUE 1 — GLOSARIO, ROOKIES, ESTE DÍA, LIVRÉES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── GLOSARIO ─────────────────────────────────────────────────────────────── */
+.glossary-search-card { padding: 1.25rem; }
+.glossary-search-input {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: white; padding: 0.75rem 1rem;
+    border-radius: 12px; font-size: 1rem;
+    transition: border-color 0.2s;
+}
+.glossary-search-input:focus { outline: none; border-color: var(--accent-color); }
+.glossary-cats {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+.glossary-cat-btn {
+    padding: 0.35rem 0.9rem; border-radius: 999px;
+    font-size: 0.78rem; font-weight: 700; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04); color: var(--muted);
+    transition: all 0.2s;
+}
+.glossary-cat-btn.active,
+.glossary-cat-btn:hover { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+.glossary-list { display: grid; gap: 1.5rem; }
+.glossary-cat-section {}
+.glossary-cat-title {
+    font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--muted);
+    margin: 0 0 0.75rem; padding-left: 0.25rem;
+}
+.glossary-cat-items { display: grid; gap: 0.75rem; }
+.glossary-item { padding: 1.1rem 1.25rem; }
+.glossary-item-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 0.5rem; gap: 0.75rem;
+}
+.glossary-term { font-size: 1rem; font-weight: 900; color: white; }
+.glossary-full { font-size: 0.82rem; color: var(--muted); font-weight: 400; margin-left: 0.3rem; }
+.glossary-tag {
+    font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.08em; padding: 0.2rem 0.6rem;
+    border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+}
+.tag-new { background: rgba(0,210,190,0.12); border: 1px solid rgba(0,210,190,0.3); color: #00D2BE; }
+.tag-eliminated { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.25); color: #ff6b6b; }
+.glossary-def { font-size: 0.88rem; color: var(--muted); margin: 0; line-height: 1.65; }
+.glossary-empty { padding: 2rem; text-align: center; color: var(--muted); }
+
+/* ─── ROOKIES ──────────────────────────────────────────────────────────────── */
+.rookies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+.rookie-card { padding: 1.4rem; display: grid; gap: 0.85rem; }
+.rookie-header { display: flex; align-items: center; gap: 0.75rem; }
+.rookie-name { font-size: 1.1rem; font-weight: 900; margin: 0 0 0.15rem; }
+.rookie-team { font-size: 0.8rem; color: var(--muted); }
+.rookie-pos { margin-left: auto; font-size: 1.4rem; font-weight: 900; color: rgba(255,255,255,0.15); }
+.rookie-highlight {
+    background: rgba(255,215,0,0.07); border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 8px; padding: 0.5rem 0.75rem;
+    font-size: 0.8rem; color: #ffd700;
+}
+.rookie-stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.4rem; }
+.rookie-stat { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.45rem; text-align: center; }
+.rs-val { display: block; font-size: 1.1rem; font-weight: 900; }
+.rs-label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-top: 0.1rem; }
+.rookie-sparkline-wrap { padding: 0.25rem 0; }
+.rookie-sparkline { width: 100%; display: block; }
+.rookie-extra { display: grid; gap: 0.35rem; }
+.rookie-info-row { display: flex; gap: 0.5rem; font-size: 0.82rem; color: var(--muted); align-items: center; }
+.rookie-quote { border-left: 3px solid var(--accent-color); margin: 0.25rem 0 0; padding: 0.4rem 0.75rem; font-size: 0.82rem; color: var(--muted); font-style: italic; }
+.rookie-detail-link { font-size: 0.82rem; font-weight: 700; text-decoration: none; }
+.rookie-detail-link:hover { text-decoration: underline; }
+.rookies-compare-card { padding: 1.5rem; }
+.rookies-compare-card h2 { margin: 0 0 0.25rem; }
+.rookies-compare-sub { font-size: 0.85rem; color: var(--muted); margin: 0 0 1rem; }
+
+/* ─── ESTE DÍA ─────────────────────────────────────────────────────────────── */
+.today-main-card { padding: 2rem; }
+.today-loading { color: var(--muted); text-align: center; padding: 2rem 0; }
+.today-cat-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.5rem; }
+.today-year { font-size: 3.5rem; font-weight: 900; color: rgba(255,255,255,0.08); margin: -0.5rem 0 0.25rem; line-height: 1; }
+.today-title { font-size: 1.4rem; font-weight: 900; margin: 0 0 0.75rem; }
+.today-desc { font-size: 0.92rem; color: var(--muted); margin: 0; line-height: 1.7; }
+.today-empty { text-align: center; padding: 2.5rem 0; color: var(--muted); }
+.today-empty h3 { color: white; margin: 0 0 0.5rem; }
+.today-more-grid { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
+.today-more-title { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 0.5rem 0; }
+.today-more-card { padding: 1rem 1.25rem; }
+.today-more-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; }
+.today-more-year { font-size: 1.1rem; font-weight: 900; color: rgba(255,255,255,0.15); }
+.today-more-fact-title { font-size: 0.92rem; display: block; margin-bottom: 0.3rem; }
+.today-more-desc { font-size: 0.82rem; color: var(--muted); margin: 0; line-height: 1.6; }
+.today-nav-card { padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.today-nav-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.55rem 1.1rem; border-radius: 10px; cursor: pointer; font-size: 0.88rem; font-weight: 700; transition: background 0.2s; }
+.today-nav-btn:hover { background: rgba(255,255,255,0.12); }
+.today-nav-label { font-size: 0.9rem; color: var(--muted); font-weight: 600; }
+
+/* ─── LIVRÉES ──────────────────────────────────────────────────────────────── */
+.liveries-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+.livery-card { padding: 1.4rem; display: grid; gap: 1rem; }
+.livery-team-header { display: flex; align-items: center; gap: 0.75rem; }
+.livery-team-name { font-size: 1.1rem; font-weight: 900; margin: 0 0 0.15rem; }
+.livery-engine { font-size: 0.78rem; color: var(--muted); }
+.livery-svg-wrap { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 1rem 0.5rem; }
+.livery-svg { width: 100%; display: block; }
+.livery-colors { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.livery-color-chip { display: flex; align-items: center; gap: 0.4rem; }
+.livery-color-swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+.livery-color-name { font-size: 0.75rem; color: var(--muted); }
+.livery-drivers { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.livery-driver-chip { display: flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.35rem 0.65rem; text-decoration: none; color: white; font-size: 0.82rem; font-weight: 600; transition: background 0.2s; }
+.livery-driver-chip:hover { background: rgba(255,255,255,0.09); }
+.livery-driver-flag { width: 16px; height: 12px; object-fit: cover; border-radius: 2px; }
+.livery-driver-num { font-weight: 800; font-size: 0.78rem; margin-left: 2px; }
