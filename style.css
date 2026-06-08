@@ -2338,12 +2338,18 @@ p { margin: 0 0 1rem; color: var(--muted); }
 /* ─── SCROLL ANIMATIONS ──────────────────────────────────────────────────────── */
 .scroll-hidden {
     opacity: 0;
-    transform: translateY(22px);
-    transition: opacity 0.45s ease, transform 0.45s ease;
+    transform: translateY(18px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    /* Safety: reveal after 1.5s even if observer fails */
+    animation: scroll-fallback 0s 1.5s forwards;
+}
+@keyframes scroll-fallback {
+    to { opacity: 1; transform: translateY(0); }
 }
 .scroll-visible {
-    opacity: 1;
-    transform: translateY(0);
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    animation: none !important;
 }
 
 /* ─── SWIPE NAV ──────────────────────────────────────────────────────────────── */

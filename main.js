@@ -577,9 +577,28 @@ function initPage() {
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPage);
+    document.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        initPage();
+        initGlobalSearch();
+        initCalendarExport();
+        initDriverSwipe();
+        initShareButtons();
+        injectNotifyButton();
+        initPWA();
+        // Scroll animations run last, after page content is rendered
+        requestAnimationFrame(() => initScrollAnimations());
+    });
 } else {
+    initTheme();
     initPage();
+    initGlobalSearch();
+    initCalendarExport();
+    initDriverSwipe();
+    initShareButtons();
+    injectNotifyButton();
+    initPWA();
+    requestAnimationFrame(() => initScrollAnimations());
 }
 
 // ─── COMPARADOR DE PILOTOS ────────────────────────────────────────────────────
@@ -2694,7 +2713,10 @@ function injectThemeToggle() {
 
 // ─── ANIMACIONES AL HACER SCROLL ─────────────────────────────────────────────
 function initScrollAnimations() {
-    const targets = document.querySelectorAll('.card, .rookie-card, .circuit-card, .glossary-item, .livree-card, .record-card, .timeline-race-card, .pred-hist-card, .h2h-card');
+    // Only animate if IntersectionObserver is supported
+    if (!('IntersectionObserver' in window)) return;
+
+    const targets = document.querySelectorAll('.card');
     if (!targets.length) return;
 
     const observer = new IntersectionObserver((entries) => {
@@ -2704,11 +2726,17 @@ function initScrollAnimations() {
                 observer.unobserve(entry.target);
             }
         });
-    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
 
     targets.forEach((el, i) => {
+        // Skip cards already in view (above the fold) — animate them immediately
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight) {
+            el.classList.add('scroll-visible');
+            return;
+        }
         el.classList.add('scroll-hidden');
-        el.style.transitionDelay = `${Math.min(i % 6, 5) * 60}ms`;
+        el.style.transitionDelay = `${Math.min(i % 4, 3) * 50}ms`;
         observer.observe(el);
     });
 }

@@ -202,6 +202,7 @@
         <div class="admin-tab active" data-tab="race-result">🏁 Resultado de carrera</div>
         <div class="admin-tab" data-tab="championship">📊 Campeonato</div>
         <div class="admin-tab" data-tab="calendar-edit">📅 Calendario</div>
+        <div class="admin-tab" data-tab="sprint">🏎 Resultado Sprint</div>
         <div class="admin-tab" data-tab="export">💾 Exportar data.js</div>
     </div>
 
@@ -288,6 +289,45 @@
             <div class="btn-row" style="margin-top:1rem">
                 <button class="btn-primary" id="save-calendar-btn">Guardar calendario →</button>
             </div>
+        </div>
+    </div>
+
+    <!-- TAB: Sprint -->
+    <div class="admin-panel" id="panel-sprint">
+        <div class="card admin-section">
+            <h2><span class="section-icon">🏎</span> Registrar resultado de carrera Sprint</h2>
+            <p style="font-size:0.85rem;color:var(--muted);margin:0 0 1rem">Los puntos del Sprint son independientes: 8-7-6-5-4-3-2-1 para los top 8.</p>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Ronda (fin de semana Sprint)</label>
+                    <select id="sprint-round"></select>
+                </div>
+                <div class="form-group">
+                    <label>Ganador del Sprint</label>
+                    <select id="sprint-winner"></select>
+                </div>
+            </div>
+            <h3 style="font-size:0.9rem;margin:1rem 0 0.5rem;color:var(--muted)">Posiciones Sprint (1–8 suman puntos)</h3>
+            <div style="overflow-x:auto">
+                <table class="race-results-table" id="sprint-positions-table">
+                    <thead>
+                        <tr>
+                            <th>Piloto</th>
+                            <th>Equipo</th>
+                            <th>Pos.</th>
+                            <th>Pts Sprint</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sprint-positions-tbody"></tbody>
+                </table>
+            </div>
+            <div class="btn-row" style="margin-top:1.25rem">
+                <button class="btn-primary" id="save-sprint-btn">Guardar Sprint →</button>
+            </div>
+        </div>
+        <div class="card admin-section" id="sprint-preview-card" style="display:none">
+            <h2><span class="section-icon">✅</span> Sprint guardado — vista previa</h2>
+            <div id="sprint-preview-content"></div>
         </div>
     </div>
 
@@ -716,6 +756,126 @@ document.addEventListener('DOMContentLoaded', () => {
     initChampionship();
     initCalendarEdit();
     initExport();
+
+    // ── SPRINT TAB ────────────────────────────────────────────────────────────
+    function initSprint() {
+        const SPRINT_PTS = [8,7,6,5,4,3,2,1];
+        const roundSel   = document.getElementById('sprint-round');
+        const winnerSel  = document.getElementById('sprint-winner');
+        if (!roundSel || !winnerSel) return;
+
+        // Only sprint weekends
+        adminCalendar.filter(r => r.sprint).forEach(r => {
+            const o = document.createElement('option');
+            o.value = r.round;
+            o.textContent = `R${r.round} — ${r.name}`;
+            roundSel.appendChild(o);
+        });
+
+        // Driver selector for winner
+        winnerSel.innerHTML = '<option value="">— Seleccionar —</option>';
+        adminDrivers.forEach(d => {
+            const o = document.createElement('option');
+            o.value = d.slug;
+            o.textContent = d.name + ' (' + d.code + ')';
+            winnerSel.appendChild(o);
+        });
+
+        // Build positions table
+        const tbody = document.getElementById('sprint-positions-tbody');
+        if (tbody) {
+            tbody.innerHTML = '';
+            adminDrivers.forEach(d => {
+                const color = window.teamColors[d.teamSlug] || '#888';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <span class="driver-dot" style="background:${color}"></span>
+                        <strong style="margin-left:6px">${d.name}</strong>
+                    </td>
+                    <td style="color:var(--muted);font-size:0.82rem">${d.team}</td>
+                    <td>
+                        <input type="number" min="1" max="22"
+                               id="sprint-pos-${d.slug}" placeholder="—"
+                               style="width:60px;padding:0.35rem 0.5rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:white;border-radius:8px;text-align:center;font-weight:700">
+                    </td>
+                    <td id="sprint-pts-${d.slug}" style="color:#ffcc00;font-weight:700;font-size:0.85rem">—</td>`;
+                tbody.appendChild(tr);
+
+                tr.querySelector('input').addEventListener('input', e => {
+                    const p = parseInt(e.target.value);
+                    document.getElementById('sprint-pts-' + d.slug).textContent =
+                        isNaN(p) ? '—' : (p >= 1 && p <= 8 ? '+' + SPRINT_PTS[p-1] : '—');
+                });
+            });
+        }
+
+        document.getElementById('save-sprint-btn')?.addEventListener('click', () => {
+            const roundNum = parseInt(roundSel.value);
+            if (!roundNum) { showToast('Seleccioná una ronda Sprint', true); return; }
+
+            const winnerSlug = winnerSel.value;
+            const winner = adminDrivers.find(d => d.slug === winnerSlug);
+
+            // Collect positions and add sprint points
+            let hasPositions = false;
+            adminDrivers.forEach(d => {
+                const val = parseInt(document.getElementById('sprint-pos-' + d.slug)?.value);
+                if (!isNaN(val) && val >= 1 && val <= 8) {
+                    hasPositions = true;
+                    // Add sprint points to driver total
+                    d.sprintPts = (d.sprintPts || 0) + SPRINT_PTS[val-1];
+                    d.points = (d.points || 0) + SPRINT_PTS[val-1];
+                }
+            });
+
+            if (!hasPositions) { showToast('Ingresá al menos una posición', true); return; }
+
+            // Re-sort standings
+            adminDrivers.sort((a,b) => b.points - a.points);
+            adminDrivers.forEach((d,i) => d.position = i+1);
+
+            // Preview top 8
+            const previewCard = document.getElementById('sprint-preview-card');
+            const previewContent = document.getElementById('sprint-preview-content');
+            if (previewCard && previewContent) {
+                previewCard.style.display = '';
+                const top8 = adminDrivers
+                    .filter(d => {
+                        const inp = document.getElementById('sprint-pos-' + d.slug);
+                        const p = parseInt(inp?.value);
+                        return !isNaN(p) && p >= 1 && p <= 8;
+                    })
+                    .sort((a,b) => {
+                        const pa = parseInt(document.getElementById('sprint-pos-' + a.slug)?.value) || 99;
+                        const pb = parseInt(document.getElementById('sprint-pos-' + b.slug)?.value) || 99;
+                        return pa - pb;
+                    });
+
+                previewContent.innerHTML = `
+                    <p style="color:var(--muted);font-size:0.85rem;margin:0 0 0.75rem">
+                        Sprint R${roundNum} · Ganador: <strong>${winner?.name || '—'}</strong>
+                    </p>
+                    <table class="race-results-table">
+                        <thead><tr><th>Pos</th><th>Piloto</th><th>Equipo</th><th>Pts</th></tr></thead>
+                        <tbody>${top8.map(d => {
+                            const color = window.teamColors[d.teamSlug] || '#888';
+                            const pos = parseInt(document.getElementById('sprint-pos-' + d.slug)?.value);
+                            return '<tr>' +
+                                '<td><strong>' + pos + '</strong></td>' +
+                                '<td><span class="driver-dot" style="background:' + color + '"></span> <strong style="margin-left:6px">' + d.name + '</strong></td>' +
+                                '<td style="color:var(--muted)">' + d.team + '</td>' +
+                                '<td style="color:#ffcc00;font-weight:700">+' + SPRINT_PTS[pos-1] + '</td>' +
+                                '</tr>';
+                        }).join('')}</tbody>
+                    </table>`;
+            }
+
+            updateStandingsPreview();
+            showToast('✅ Resultado Sprint guardado. Exportá data.js para aplicar.');
+        });
+    }
+    initSprint();
 
     // Logout
     document.getElementById('logout-btn').addEventListener('click', () => {
