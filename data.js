@@ -121,7 +121,7 @@ window.drivers = [
         position: 10,
         name: 'Pierre Gasly',
         flag: '🇫🇷', flagImg: 'img/flags/fr.png',
-        photo: '',
+        photo: 'img/drivers/pierre-gasly.jpg',
         team: 'Alpine', teamSlug: 'alpine',
         points: 26, code: 'GAS', colorClass: 'team-alpine',
         nationality: 'Francés', age: 29,
