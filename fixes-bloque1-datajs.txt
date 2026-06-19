@@ -1,0 +1,147 @@
+═══════════════════════════════════════════════════════════════════════
+BLOQUE 1 — CAMBIOS EN data.js
+═══════════════════════════════════════════════════════════════════════
+
+─── FIX 1: Motor de Alpine ──────────────────────────────────────────
+BUSCAR en el objeto Alpine dentro de window.constructors:
+    engine: 'Renault',
+
+REEMPLAZAR POR:
+    engine: 'Mercedes',
+
+
+─── FIX 2: Glosario Pole Position ──────────────────────────────────
+BUSCAR (dentro de window.glossaryTerms, entrada term:'Pole Position'):
+    def: '...(el texto completo)...Vale 1 punto adicional si se registra
+    la vuelta más rápida en Q1, Q2 o Q3.'
+
+REEMPLAZAR ESA ÚLTIMA ORACIÓN por nada. La definición correcta termina
+en "...de la clasificación que determina la grilla de largada."
+es decir, eliminar la frase "Vale 1 punto adicional si se registra la
+vuelta más rápida en Q1, Q2 o Q3." porque es incorrecta.
+(El punto extra es por vuelta rápida EN CARRERA, que ya está explicado
+en la entrada "Punto extra por VR".)
+
+
+─── FIX 3: Trivia — opción Alpine Motor ────────────────────────────
+BUSCAR en window.triviaQuestions, la pregunta sobre motor de Alpine:
+    { q: '¿Cuál es el motor proveedor de Alpine en 2026?',
+      opts: ['Renault','Ferrari','Honda','Mercedes'], ans: 3, cat: '2026' },
+
+Esta entrada ya tiene ans:3 (Mercedes) que es correcto. Solo hay que
+asegurarse de que data.js también diga Mercedes (ver FIX 1 arriba).
+No hay que cambiar la trivia, solo data.js.
+
+
+═══════════════════════════════════════════════════════════════════════
+BLOQUE 1 — CAMBIOS EN index.html
+═══════════════════════════════════════════════════════════════════════
+
+─── FIX 4: Link roto Livrées ────────────────────────────────────────
+BUSCAR en index.html (quick-link-card de Livrées):
+    href="livrées.html"
+
+REEMPLAZAR POR:
+    href="livrees.html"
+
+(El archivo real en el repo se llama livrees.html sin tilde.)
+
+
+─── FIX 5: Stats hardcoded en index.html ───────────────────────────
+BUSCAR el bloque .hero-stats en index.html:
+    <div class="hero-stat">
+        <span class="stat-number">7</span>
+        <span>Carreras disputadas</span>
+    </div>
+    <div class="hero-stat">
+        <span class="stat-number">17</span>
+        <span>Restantes</span>
+    </div>
+    <div class="hero-stat">
+        <span class="stat-number">11</span>
+        <span>Escuderías</span>
+    </div>
+    <div class="hero-stat">
+        <span class="stat-number">22</span>
+        <span>Pilotos</span>
+    </div>
+
+REEMPLAZAR POR (los números ahora los pone renderHomeStats() en JS):
+    <div class="hero-stat">
+        <span class="stat-number">—</span>
+        <span>Carreras disputadas</span>
+    </div>
+    <div class="hero-stat">
+        <span class="stat-number">—</span>
+        <span>Restantes</span>
+    </div>
+    <div class="hero-stat">
+        <span class="stat-number">—</span>
+        <span>Escuderías</span>
+    </div>
+    <div class="hero-stat">
+        <span class="stat-number">—</span>
+        <span>Pilotos</span>
+    </div>
+
+
+═══════════════════════════════════════════════════════════════════════
+BLOQUE 1 — CAMBIOS EN admin.js (dentro de admin.html)
+═══════════════════════════════════════════════════════════════════════
+
+─── FIX 6: Código muerto — resultIdx sin usar ───────────────────────
+BUSCAR en saveRaceResult():
+    const resultIdx = adminRaces.length - 1;
+
+ELIMINAR esa línea (no se usa en ningún lado después).
+
+
+─── FIX 7: Validar posiciones duplicadas en saveRaceResult() ────────
+BUSCAR justo antes de:
+    if (!hasPositions) { showToast('Ingresá al menos una posición', true); return; }
+
+AGREGAR DESPUÉS de ese bloque:
+    // Validar que no haya posiciones repetidas
+    const posValues = Object.values(positions).filter(v => v !== null);
+    const posSet = new Set(posValues);
+    if (posSet.size !== posValues.length) {
+        showToast('Hay posiciones repetidas — revisá la tabla', true);
+        return;
+    }
+
+
+─── FIX 8: Sprint — evitar doble suma de puntos ─────────────────────
+En la función initSprint(), dentro del listener de save-sprint-btn,
+BUSCAR:
+    document.getElementById('save-sprint-btn')?.addEventListener('click', () => {
+        const roundNum = parseInt(roundSel.value);
+        if (!roundNum) { showToast('Seleccioná una ronda Sprint', true); return; }
+
+AGREGAR justo después de la validación de roundNum:
+        // Verificar que no se haya guardado ya este Sprint
+        const alreadySaved = adminDrivers.some(d => d.sprintRounds && d.sprintRounds.includes(roundNum));
+        if (alreadySaved) {
+            showToast('⚠️ Este Sprint ya fue guardado. Exportá para aplicar.', true);
+            return;
+        }
+
+Y después de calcular los puntos Sprint de cada piloto, AGREGAR:
+        // Marcar esta ronda como guardada para evitar doble suma
+        adminDrivers.forEach(d => {
+            if (!d.sprintRounds) d.sprintRounds = [];
+            if (!d.sprintRounds.includes(roundNum)) d.sprintRounds.push(roundNum);
+        });
+
+
+═══════════════════════════════════════════════════════════════════════
+BLOQUE 1 — AGREGAR EN calendar.html (o index.html)
+═══════════════════════════════════════════════════════════════════════
+
+─── FIX 9: Cargar calendar-sessions.js ─────────────────────────────
+En calendar.html, AGREGAR antes de <script src="data.js">:
+    <script src="calendar-sessions.js"></script>
+
+Queda así:
+    <script src="calendar-sessions.js"></script>
+    <script src="data.js"></script>
+    <script src="main.js"></script>
