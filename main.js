@@ -94,12 +94,14 @@ function renderDriverStandings() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    window.drivers.forEach(driver => {
+    const sorted = [...window.drivers].sort((a, b) => b.points - a.points || (b.wins || 0) - (a.wins || 0));
+
+    sorted.forEach((driver, idx) => {
         const tr = document.createElement('tr');
 
         const positionCell = document.createElement('td');
         positionCell.className = 'position';
-        positionCell.textContent = driver.position;
+        positionCell.textContent = idx + 1;
 
         const nameCell = document.createElement('td');
         nameCell.textContent = driver.name;
@@ -124,12 +126,14 @@ function renderConstructorStandings() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    window.constructors.forEach(team => {
+    const sorted = [...window.constructors].sort((a, b) => b.points - a.points);
+
+    sorted.forEach((team, idx) => {
         const tr = document.createElement('tr');
 
         const positionCell = document.createElement('td');
         positionCell.className = 'position';
-        positionCell.textContent = team.position;
+        positionCell.textContent = idx + 1;
 
         const nameCell = document.createElement('td');
         nameCell.appendChild(createTeamCell(team.name, team.code, team.colorClass, team.slug));
@@ -475,7 +479,7 @@ function renderChampionshipLeaders() {
     var dEl = document.getElementById('driver-leader');
     var tEl = document.getElementById('team-leader');
     if (dEl && window.drivers && window.drivers.length) {
-        var d = window.drivers[0];
+        var d = [...window.drivers].sort((a, b) => b.points - a.points)[0];
         var dColor = (window.teamColors && window.teamColors[d.teamSlug]) || '#888';
         var dFlag = d.flagImg ? '<img src="' + d.flagImg + '" class="detail-flag-img" alt="">' : (d.flag || '');
         dEl.innerHTML =
@@ -485,7 +489,7 @@ function renderChampionshipLeaders() {
             '<a class="detail-link" href="driver.html?slug=' + d.slug + '">Ver →</a>';
     }
     if (tEl && window.constructors && window.constructors.length) {
-        var t = window.constructors[0];
+        var t = [...window.constructors].sort((a, b) => b.points - a.points)[0];
         var tColor = (window.teamColors && window.teamColors[t.slug]) || '#888';
         var tFlag = t.flagImg ? '<img src="' + t.flagImg + '" class="detail-flag-img" alt="">' : (t.flag || '');
         tEl.innerHTML =
@@ -496,11 +500,95 @@ function renderChampionshipLeaders() {
     }
 }
 
+function renderCalendar() {
+    const list = document.getElementById('calendar-list-dynamic');
+    if (!list || !window.calendar) return;
+
+    const SUPPORT_LABELS = { f2: 'F2', f3: 'F3', fa: 'F1 Ac.' };
+    const tvBadge = val => val === 'live'
+        ? '<span class="tv-badge live">EN VIVO</span>'
+        : '<span class="tv-badge delayed">DIFERIDO</span>';
+    const fmtDate = iso => {
+        if (!iso) return '';
+        const d = new Date(iso + 'T00:00:00');
+        const s = d.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' });
+        return s.charAt(0).toUpperCase() + s.slice(1).replace('.', '');
+    };
+
+    list.innerHTML = window.calendar.map(race => {
+        const sess = (window.calendarSessions && window.calendarSessions[race.round]) || null;
+        const liClass = race.status === 'done' ? 'race-done'
+            : race.status === 'next' ? 'race-next'
+            : 'race-upcoming';
+
+        const raceName = (race.name || '').replace('GP de ', '');
+        const sprintTag = race.sprint ? ' <em class="sprint-tag">Sprint</em>' : '';
+        const timeStr = race.time ? ` · <strong>${race.time} hs ARG</strong>` : '';
+        const dateStr = race.status === 'done' ? `${fmtDate(race.date)} · ` : '';
+
+        const supportChips = sess && sess.support
+            ? `<div class="support-chips-row">${sess.support.map(s => `<span class="support-chip ${s}">${SUPPORT_LABELS[s] || s.toUpperCase()}</span>`).join('')}</div>`
+            : '<div class="support-chips-row"></div>';
+
+        const tvChips = (sess && sess.tv && race.status !== 'done')
+            ? `<div class="tv-chips">
+                <span class="tv-chip"><img src="img/Fox Sport.png" alt="Fox" class="tv-logo-sm"> ${tvBadge(sess.tv.fox)}</span>
+                <span class="tv-chip"><img src="img/Disney+.png" alt="Disney+" class="tv-logo-sm"> ${tvBadge(sess.tv.disney)}</span>
+              </div>`
+            : '';
+
+        const statusHtml = race.status === 'done'
+            ? '<span class="race-status done">✅</span>'
+            : race.status === 'next'
+                ? '<span class="race-status next">🔜 PRÓXIMA</span>'
+                : '<span class="race-status">⏳</span>';
+
+        const winnerHtml = race.status === 'done'
+            ? `<span class="race-winner">🏆 ${race.winner || '—'}</span>`
+            : '';
+
+        const scheduleHtml = (sess && sess.sessions && race.status !== 'done')
+            ? `<div class="race-schedule">${sess.sessions.map(s => {
+                const dotClass = s.type === 'race' ? 'race-dot' : s.type === 'sprint' ? 'sprint-sched' : s.type;
+                const rowClass = s.type === 'race' ? 'sched-row race-row' : 'sched-row';
+                return `<div class="${rowClass}"><span class="sched-dot ${dotClass}"></span><span class="sched-label">${s.label}</span><span class="sched-time">${s.day} · ${s.time}</span></div>`;
+            }).join('')}</div>`
+            : '';
+
+        return `<li class="${liClass}">
+            <div class="race-main-row">
+                <span class="race-round">R${race.round}</span>
+                <span class="race-info">${dateStr}${race.flag} <strong>${raceName}</strong>${race.circuit ? ', ' + race.circuit : ''}${sprintTag}${timeStr}</span>
+                ${supportChips}
+                ${tvChips}
+                ${winnerHtml}
+                ${statusHtml}
+            </div>
+            ${scheduleHtml}
+        </li>`;
+    }).join('');
+}
+
+function renderHomeStats() {
+    if (!window.calendar) return;
+    const done = window.calendar.filter(r => r.status === 'done').length;
+    const remaining = window.calendar.length - done;
+    const setStat = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    setStat('stat-races-done', done);
+    setStat('stat-races-remaining', remaining);
+    setStat('stat-teams', (window.constructors || []).length);
+    setStat('stat-drivers', (window.drivers || []).length);
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 function initPage() {
     var body = document.body;
 
     if (body.classList.contains('page-home')) {
+        renderHomeStats();
         renderChampionshipLeaders();
         renderCountdown();
         return;
@@ -510,6 +598,7 @@ function initPage() {
         return;
     }
     if (body.classList.contains('page-calendar')) {
+        renderCalendar();
         return;
     }
     if (body.classList.contains('page-drivers')) {
@@ -956,7 +1045,7 @@ window.glossaryTerms = [
         term: 'Pole Position',
         full: 'Primera posición en la grilla',
         cat: 'Carrera',
-        def: 'La posición número 1 de la grilla de largada, otorgada al piloto más rápido en la sesión de clasificación. Da una ventaja importante en circuitos donde adelantar es difícil (como Mónaco o Hungaroring). Vale 1 punto adicional si se registra la vuelta más rápida en Q1, Q2 o Q3.'
+        def: 'La posición número 1 de la grilla de largada, otorgada al piloto más rápido en la sesión de clasificación. Da una ventaja importante en circuitos donde adelantar es difícil (como Mónaco o Hungaroring).'
     },
     {
         term: 'Q1 / Q2 / Q3',
@@ -2147,11 +2236,18 @@ function renderPredictor() {
         if (!pred || !race) return null;
         const actual = window.races.find(r => r.round === race.round);
         if (!actual) return null;
-        // For done races we have winner — only score P1 for now
+
+        // El podio completo se arma a partir de raceResults de cada piloto
+        // (posición por ronda), que es lo que guarda el panel de admin.
+        const roundIdx = window.races.findIndex(r => r.round === race.round);
+        const findByPosition = pos => {
+            const d = window.drivers.find(dr => (dr.raceResults || [])[roundIdx] === pos);
+            return d ? d.name : (pos === 1 ? actual.winner : null);
+        };
+        const actuals = [findByPosition(1), findByPosition(2), findByPosition(3)];
+
         let score = 0, max = 9;
-        const positions = ['p1','p2','p3'];
-        const actuals = [actual.winner, null, null]; // expand when we have full podium
-        positions.forEach((pos, i) => {
+        ['p1','p2','p3'].forEach((pos, i) => {
             if (!pred[pos] || !actuals[i]) return;
             if (pred[pos] === actuals[i]) score += 3;
             else if (actuals.includes(pred[pos])) score += 1;
@@ -2198,6 +2294,12 @@ function renderPredictor() {
         if (!pred && !actual) return '';
         const s = pred ? scorePredict(pred, race) : null;
 
+        const roundIdx = window.races.findIndex(r => r.round === race.round);
+        const podium = [1, 2, 3].map(pos => {
+            const d = window.drivers.find(dr => (dr.raceResults || [])[roundIdx] === pos);
+            return d ? d.name : (pos === 1 ? actual?.winner : null);
+        });
+
         return `<div class="card pred-hist-card">
             <div class="pred-hist-header">
                 <span class="pred-hist-race">${race.flag} ${race.name}</span>
@@ -2217,12 +2319,11 @@ function renderPredictor() {
                 <div class="pred-hist-divider"></div>
                 <div class="pred-hist-col">
                     <div class="pred-hist-col-title">Resultado real</div>
-                    <div class="pred-hist-row">
-                        <span class="pred-hist-pos">🥇</span>
-                        <span class="pred-hist-name">${actual?.winner || '—'}</span>
-                    </div>
-                    <div class="pred-hist-row"><span class="pred-hist-pos">🥈</span><span class="pred-hist-name" style="color:var(--muted)">—</span></div>
-                    <div class="pred-hist-row"><span class="pred-hist-pos">🥉</span><span class="pred-hist-name" style="color:var(--muted)">—</span></div>
+                    ${['🥇','🥈','🥉'].map((medal, i) => `
+                        <div class="pred-hist-row">
+                            <span class="pred-hist-pos">${medal}</span>
+                            <span class="pred-hist-name"${podium[i] ? '' : ' style="color:var(--muted)"'}>${podium[i] || '—'}</span>
+                        </div>`).join('')}
                 </div>
             </div>
         </div>`;

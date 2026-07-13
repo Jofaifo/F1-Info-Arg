@@ -370,7 +370,7 @@ window.constructors = [
         points: 41, code: 'ALP', colorClass: 'team-alpine', color: '#005AFF',
         image: 'img/alpine.png',
         base: 'Enstone, Reino Unido', origin: 'Francia',
-        teamPrincipal: 'Otmar Szafnauer', engine: 'Renault', championships: 1,
+        teamPrincipal: 'Otmar Szafnauer', engine: 'Mercedes', championships: 1,
         topDrivers: ['Pierre Gasly', 'Franco Colapinto'],
         description: 'Alpine suma puntos con buen rendimiento técnico. Colapinto es la gran revelación argentina del equipo.',
         constructorHistory: [3, 8, 12, 22, 28, 31, 29],

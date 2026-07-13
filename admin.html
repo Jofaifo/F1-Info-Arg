@@ -544,6 +544,10 @@ function saveRaceResult() {
 
     if (!hasPositions) { showToast('Ingresá al menos una posición', true); return; }
 
+    const usedPositions = Object.values(positions).filter(p => p !== null);
+    const dupPosition = usedPositions.find((p, i) => usedPositions.indexOf(p) !== i);
+    if (dupPosition) { showToast(`Hay dos pilotos en la posición ${dupPosition}`, true); return; }
+
     // Find which race index this is in the results arrays
     const raceInResults = adminRaces.findIndex(r => r.round === roundNum);
     if (raceInResults < 0) {
@@ -566,7 +570,6 @@ function saveRaceResult() {
     }
 
     // Update driver raceResults
-    const resultIdx = adminRaces.length - 1;
     adminDrivers.forEach(d => {
         if (!d.raceResults) d.raceResults = [];
         // Find the correct index in results
@@ -817,6 +820,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── SPRINT TAB ────────────────────────────────────────────────────────────
     function initSprint() {
         const SPRINT_PTS = [8,7,6,5,4,3,2,1];
+        const savedSprintRounds = new Set();
         const roundSel   = document.getElementById('sprint-round');
         const winnerSel  = document.getElementById('sprint-winner');
         if (!roundSel || !winnerSel) return;
@@ -871,22 +875,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const roundNum = parseInt(roundSel.value);
             if (!roundNum) { showToast('Seleccioná una ronda Sprint', true); return; }
 
+            if (savedSprintRounds.has(roundNum)) {
+                showToast('El Sprint de esta ronda ya fue guardado — recargá el panel para volver a editarlo', true);
+                return;
+            }
+
             const winnerSlug = winnerSel.value;
             const winner = adminDrivers.find(d => d.slug === winnerSlug);
 
-            // Collect positions and add sprint points
+            // Collect positions first, to validate before tocar puntos
+            const sprintPositions = {};
             let hasPositions = false;
             adminDrivers.forEach(d => {
                 const val = parseInt(document.getElementById('sprint-pos-' + d.slug)?.value);
                 if (!isNaN(val) && val >= 1 && val <= 8) {
                     hasPositions = true;
-                    // Add sprint points to driver total
-                    d.sprintPts = (d.sprintPts || 0) + SPRINT_PTS[val-1];
-                    d.points = (d.points || 0) + SPRINT_PTS[val-1];
+                    sprintPositions[d.slug] = val;
                 }
             });
 
             if (!hasPositions) { showToast('Ingresá al menos una posición', true); return; }
+
+            const usedSprintPositions = Object.values(sprintPositions);
+            const dupSprintPos = usedSprintPositions.find((p, i) => usedSprintPositions.indexOf(p) !== i);
+            if (dupSprintPos) { showToast(`Hay dos pilotos en la posición ${dupSprintPos} del Sprint`, true); return; }
+
+            // Recién acá, con todo validado, sumamos los puntos
+            adminDrivers.forEach(d => {
+                const val = sprintPositions[d.slug];
+                if (val) {
+                    d.sprintPts = (d.sprintPts || 0) + SPRINT_PTS[val-1];
+                    d.points = (d.points || 0) + SPRINT_PTS[val-1];
+                }
+            });
+            savedSprintRounds.add(roundNum);
 
             // Re-sort standings
             adminDrivers.sort((a,b) => b.points - a.points);
