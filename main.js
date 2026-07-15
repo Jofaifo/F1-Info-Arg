@@ -214,8 +214,10 @@ function renderDriverDetail(slug) {
     }
 
     const color = (window.teamColors && window.teamColors[driver.teamSlug]) || '#888';
-    const leader = window.drivers[0];
-    const gap = driver.position === 1 ? 'Líder' : `-${leader.points - driver.points} pts del líder`;
+    const sortedDrivers = [...window.drivers].sort((a, b) => b.points - a.points);
+    const realPosition = sortedDrivers.findIndex(d => d.slug === driver.slug) + 1;
+    const leader = sortedDrivers[0];
+    const gap = realPosition === 1 ? 'Líder' : `-${leader.points - driver.points} pts del líder`;
 
     // Bandera real
     const flagHtml = driver.flagImg
@@ -292,7 +294,7 @@ function renderDriverDetail(slug) {
     }
 
     title.innerHTML = `${flagHtml} ${driver.name}`;
-    subtitle.textContent = `${driver.team} · ${driver.points} pts · P${driver.position}`;
+    subtitle.textContent = `${driver.team} · ${driver.points} pts · P${realPosition}`;
 
     detail.innerHTML = `
         <div class="detail-grid">
@@ -320,7 +322,7 @@ function renderDriverDetail(slug) {
                             </div>
                         </div>
                         <ul class="detail-list">
-                            <li><strong>Posición:</strong> ${driver.position}º <span class="muted-text">(${gap})</span></li>
+                            <li><strong>Posición:</strong> ${realPosition}º <span class="muted-text">(${gap})</span></li>
                             <li><strong>Puntos:</strong> ${driver.points}</li>
                             <li><strong>Nacionalidad:</strong> ${driver.nationality}</li>
                             <li><strong>Edad:</strong> ${driver.age} años</li>
@@ -360,8 +362,10 @@ function renderTeamDetail(slug) {
     }
 
     const color = (window.teamColors && window.teamColors[team.slug]) || '#888';
-    const leader = window.constructors[0];
-    const gap = team.position === 1 ? 'Líder' : `-${leader.points - team.points} pts del líder`;
+    const sortedConstructors = [...window.constructors].sort((a, b) => b.points - a.points);
+    const realPosition = sortedConstructors.findIndex(c => c.slug === team.slug) + 1;
+    const leader = sortedConstructors[0];
+    const gap = realPosition === 1 ? 'Líder' : `-${leader.points - team.points} pts del líder`;
 
     const teamImage = team.image
         ? `<img class="detail-image" src="${team.image}" alt="${team.name} logo">`
@@ -396,7 +400,7 @@ function renderTeamDetail(slug) {
     }).join('');
 
     title.innerHTML = `${team.flagImg ? `<img src="${team.flagImg}" class="detail-flag-img" alt="">` : (team.flag || '')} ${team.name}`;
-    subtitle.textContent = `${team.points} pts · P${team.position} · ${team.championships} campeonatos`;
+    subtitle.textContent = `${team.points} pts · P${realPosition} · ${team.championships} campeonatos`;
 
     detail.innerHTML = `
         <div class="detail-grid">
@@ -404,7 +408,7 @@ function renderTeamDetail(slug) {
                 ${teamImage}
                 <p class="driver-bio">${team.description}</p>
                 <ul class="detail-list">
-                    <li><strong>Posición:</strong> ${team.position}º <span class="muted-text">(${gap})</span></li>
+                    <li><strong>Posición:</strong> ${realPosition}º <span class="muted-text">(${gap})</span></li>
                     <li><strong>Puntos:</strong> ${team.points}</li>
                     <li><strong>Origen:</strong> ${originFlagHtml}</li>
                     <li><strong>Base:</strong> ${baseFlagHtml}</li>
@@ -500,9 +504,22 @@ function renderChampionshipLeaders() {
     }
 }
 
-function renderCalendar() {
+function renderCalendar(filter) {
     const list = document.getElementById('calendar-list-dynamic');
     if (!list || !window.calendar) return;
+    filter = filter || 'all';
+
+    const races = window.calendar.filter(race => {
+        if (filter === 'upcoming') return race.status === 'next' || race.status === 'upcoming';
+        if (filter === 'sprint') return !!race.sprint;
+        if (filter === 'done') return race.status === 'done';
+        return true;
+    });
+
+    if (!races.length) {
+        list.innerHTML = '<li style="color:var(--muted);padding:1rem">No hay carreras que coincidan con este filtro.</li>';
+        return;
+    }
 
     const SUPPORT_LABELS = { f2: 'F2', f3: 'F3', fa: 'F1 Ac.' };
     const tvBadge = val => val === 'live'
@@ -515,7 +532,7 @@ function renderCalendar() {
         return s.charAt(0).toUpperCase() + s.slice(1).replace('.', '');
     };
 
-    list.innerHTML = window.calendar.map(race => {
+    list.innerHTML = races.map(race => {
         const sess = (window.calendarSessions && window.calendarSessions[race.round]) || null;
         const liClass = race.status === 'done' ? 'race-done'
             : race.status === 'next' ? 'race-next'
@@ -569,6 +586,18 @@ function renderCalendar() {
     }).join('');
 }
 
+function initCalendarFilters() {
+    const filterBar = document.getElementById('calendar-filters');
+    if (!filterBar) return;
+    filterBar.querySelectorAll('.cal-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBar.querySelectorAll('.cal-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCalendar(btn.dataset.filter);
+        });
+    });
+}
+
 function renderHomeStats() {
     if (!window.calendar) return;
     const done = window.calendar.filter(r => r.status === 'done').length;
@@ -599,6 +628,7 @@ function initPage() {
     }
     if (body.classList.contains('page-calendar')) {
         renderCalendar();
+        initCalendarFilters();
         return;
     }
     if (body.classList.contains('page-drivers')) {
@@ -727,6 +757,10 @@ function runCompare() {
     const result = document.getElementById('compare-result');
     if (!dA || !dB || !result) return;
 
+    const sortedDriversCmp = [...window.drivers].sort((a, b) => b.points - a.points);
+    const posA = sortedDriversCmp.findIndex(d => d.slug === dA.slug) + 1;
+    const posB = sortedDriversCmp.findIndex(d => d.slug === dB.slug) + 1;
+
     if (slugA === slugB) {
         result.className = 'card compare-same-warning';
         result.innerHTML = '<p>Seleccioná dos pilotos distintos para comparar.</p>';
@@ -822,14 +856,14 @@ function runCompare() {
                 <img src="${dA.flagImg || ''}" class="detail-flag-img" alt="">
                 <div class="cmp-hname" style="color:${colA}">${dA.name}</div>
                 <div class="cmp-hteam">${dA.team}</div>
-                <div class="cmp-hpts">${dA.points} pts · P${dA.position}</div>
+                <div class="cmp-hpts">${dA.points} pts · P${posA}</div>
             </div>
             <div class="cmp-vs-badge">VS</div>
             <div class="cmp-header-b card" style="border-top:3px solid ${colB}">
                 <img src="${dB.flagImg || ''}" class="detail-flag-img" alt="">
                 <div class="cmp-hname" style="color:${colB}">${dB.name}</div>
                 <div class="cmp-hteam">${dB.team}</div>
-                <div class="cmp-hpts">${dB.points} pts · P${dB.position}</div>
+                <div class="cmp-hpts">${dB.points} pts · P${posB}</div>
             </div>
         </div>
 
@@ -1287,6 +1321,8 @@ function renderRookies() {
         .map(s => window.drivers.find(d => d.slug === s))
         .filter(Boolean);
 
+    const sortedDriversRk = [...window.drivers].sort((a, b) => b.points - a.points);
+
     grid.innerHTML = rookies.map(d => {
         const color = window.getTeamColor(d.teamSlug);
         const extra = (window.rookieExtra || {})[d.slug] || {};
@@ -1313,7 +1349,7 @@ function renderRookies() {
                     <h3 class="rookie-name" style="color:${color}">${d.name}</h3>
                     <div class="rookie-team">${d.team} · #${d.code}</div>
                 </div>
-                <div class="rookie-pos">P${d.position}</div>
+                <div class="rookie-pos">P${sortedDriversRk.findIndex(x => x.slug === d.slug) + 1}</div>
             </div>
             ${extra.highlight ? `<div class="rookie-highlight">⭐ ${extra.highlight}</div>` : ''}
             <div class="rookie-stats-row">

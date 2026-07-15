@@ -395,8 +395,54 @@
             </div>
             <div id="export-output" style="display:none">
                 <div class="code-output" id="code-output"></div>
-                <button class="copy-btn" id="copy-btn">📋 Copiar código</button>
+                <div class="btn-row" style="margin-top:0.75rem">
+                    <button class="copy-btn" id="copy-btn">📋 Copiar código</button>
+                    <button class="copy-btn" id="download-btn">💾 Descargar como archivo .js</button>
+                </div>
             </div>
+        </div>
+
+        <div class="card admin-section">
+            <h2><span class="section-icon">🚀</span> Publicar automáticamente en GitHub</h2>
+            <p style="font-size:0.85rem;color:var(--muted);margin:0 0 1rem">
+                Comitea <code>data.js</code> directo al repo con la API de GitHub — sin copiar, pegar ni descargar nada.
+                Necesitás un <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:#6eff99">Personal Access Token</a>
+                (fine-grained, con permiso "Contents: Read and write" solo sobre este repo).
+            </p>
+            <div class="admin-note card" style="margin-bottom:1rem">
+                <span>⚠️</span>
+                <span>El token queda guardado en el navegador (localStorage). No lo compartas ni lo cargues en una compu que no sea tuya.</span>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Usuario / organización</label>
+                    <input type="text" id="gh-owner" placeholder="ej: juaniignacio">
+                </div>
+                <div class="form-group">
+                    <label>Repositorio</label>
+                    <input type="text" id="gh-repo" placeholder="ej: pagina-formula-1">
+                </div>
+                <div class="form-group">
+                    <label>Rama</label>
+                    <input type="text" id="gh-branch" placeholder="main" value="main">
+                </div>
+                <div class="form-group">
+                    <label>Ruta del archivo</label>
+                    <input type="text" id="gh-path" placeholder="data.js" value="data.js">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex:1">
+                    <label>Token (Personal Access Token)</label>
+                    <input type="password" id="gh-token" placeholder="github_pat_...">
+                </div>
+            </div>
+            <div class="btn-row" style="margin-top:0.75rem">
+                <button class="btn-secondary" id="gh-save-config-btn">Guardar configuración</button>
+                <button class="btn-primary" id="publish-github-btn">🚀 Publicar cambios en GitHub</button>
+                <a id="publish-github-link" href="#" target="_blank" rel="noopener" style="display:none;color:#6eff99;align-self:center;font-size:0.85rem">Ver commit →</a>
+            </div>
+            <p id="gh-status" style="font-size:0.78rem;color:var(--muted);margin:0.75rem 0 0"></p>
         </div>
         <div class="card admin-section">
             <h2><span class="section-icon">📋</span> Instrucciones</h2>
@@ -796,9 +842,13 @@ function initExport() {
     document.getElementById('export-calendar-btn').addEventListener('click', () => exportBlock('calendar'));
     document.getElementById('export-all-btn').addEventListener('click', () => exportBlock('all'));
     document.getElementById('copy-btn').addEventListener('click', copyCode);
+    document.getElementById('download-btn').addEventListener('click', downloadCode);
 }
 
+let lastExportType = 'all';
+
 function exportBlock(type) {
+    lastExportType = type;
     const output = document.getElementById('export-output');
     const code = document.getElementById('code-output');
     output.style.display = '';
@@ -846,6 +896,169 @@ function copyCode() {
     }).catch(() => {
         showToast('No se pudo copiar — seleccionalo y copialo manualmente', true);
     });
+}
+
+function downloadCode() {
+    const code = document.getElementById('code-output').textContent;
+    if (!code) { showToast('No hay nada exportado todavía', true); return; }
+    const blob = new Blob([code], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `data-bloque-${lastExportType}-${new Date().toISOString().slice(0,10)}.js`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('💾 Archivo descargado');
+}
+
+// ── PUBLICAR AUTOMÁTICAMENTE EN GITHUB ──────────────────────────────────────────
+const GH_CONFIG_KEY = 'f1admin_github_config';
+
+function b64EncodeUnicode(str) {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m, p1) => String.fromCharCode(parseInt(p1, 16))));
+}
+function b64DecodeUnicode(str) {
+    return decodeURIComponent(atob(str).split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join(''));
+}
+
+function getGithubConfig() {
+    try { return JSON.parse(localStorage.getItem(GH_CONFIG_KEY) || 'null'); }
+    catch { return null; }
+}
+
+// Reemplaza "window.<varName> = [ ... ];" por completo, sin importar el formato/indentación,
+// contando corchetes y respetando strings para encontrar el cierre correcto.
+function replaceTopLevelBlock(source, varName, newValueJson) {
+    const marker = `window.${varName}`;
+    const markerIdx = source.indexOf(marker);
+    if (markerIdx === -1) throw new Error(`No encontré "window.${varName}" en el archivo`);
+    const arrStart = source.indexOf('[', markerIdx);
+    if (arrStart === -1) throw new Error(`No encontré el array de window.${varName}`);
+
+    let depth = 0, i = arrStart, inStr = null, esc = false;
+    for (; i < source.length; i++) {
+        const ch = source[i];
+        if (inStr) {
+            if (esc) esc = false;
+            else if (ch === '\\') esc = true;
+            else if (ch === inStr) inStr = null;
+            continue;
+        }
+        if (ch === '"' || ch === "'" || ch === '`') { inStr = ch; continue; }
+        if (ch === '[') depth++;
+        else if (ch === ']') {
+            depth--;
+            if (depth === 0) { i++; break; }
+        }
+    }
+    let end = i;
+    if (source[end] === ';') end++;
+
+    return source.slice(0, markerIdx) + `window.${varName} = ${newValueJson};` + source.slice(end);
+}
+
+function initGithubPublish() {
+    const cfg = getGithubConfig();
+    const statusEl = document.getElementById('gh-status');
+    if (cfg) {
+        document.getElementById('gh-owner').value = cfg.owner || '';
+        document.getElementById('gh-repo').value = cfg.repo || '';
+        document.getElementById('gh-branch').value = cfg.branch || 'main';
+        document.getElementById('gh-path').value = cfg.path || 'data.js';
+        // El token no se re-muestra en el input por las dudas, pero queda guardado
+        statusEl.textContent = `Configurado: ${cfg.owner}/${cfg.repo} (rama ${cfg.branch || 'main'}). Token guardado — dejalo en blanco si no lo querés cambiar.`;
+    }
+
+    document.getElementById('gh-save-config-btn').addEventListener('click', () => {
+        const owner = document.getElementById('gh-owner').value.trim();
+        const repo = document.getElementById('gh-repo').value.trim();
+        const branch = document.getElementById('gh-branch').value.trim() || 'main';
+        const path = document.getElementById('gh-path').value.trim() || 'data.js';
+        const tokenInput = document.getElementById('gh-token').value.trim();
+
+        if (!owner || !repo) { showToast('Completá usuario y repositorio', true); return; }
+
+        const prev = getGithubConfig();
+        const token = tokenInput || (prev && prev.token) || '';
+        if (!token) { showToast('Falta el token (la primera vez es obligatorio)', true); return; }
+
+        localStorage.setItem(GH_CONFIG_KEY, JSON.stringify({ owner, repo, branch, path, token }));
+        document.getElementById('gh-token').value = '';
+        statusEl.textContent = `Configurado: ${owner}/${repo} (rama ${branch}).`;
+        showToast('✅ Configuración guardada');
+    });
+
+    document.getElementById('publish-github-btn').addEventListener('click', publishToGithub);
+}
+
+async function publishToGithub() {
+    const cfg = getGithubConfig();
+    if (!cfg || !cfg.owner || !cfg.repo || !cfg.token) {
+        showToast('Completá y guardá la configuración de GitHub primero', true);
+        return;
+    }
+    if (!confirm(`¿Publicar los cambios actuales en ${cfg.owner}/${cfg.repo} (rama ${cfg.branch || 'main'})? Esto comitea directo al repo.`)) return;
+
+    const branch = cfg.branch || 'main';
+    const path = cfg.path || 'data.js';
+    const btn = document.getElementById('publish-github-btn');
+    const linkEl = document.getElementById('publish-github-link');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Publicando…';
+    linkEl.style.display = 'none';
+
+    const ghHeaders = {
+        'Authorization': `Bearer ${cfg.token}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+    };
+
+    try {
+        const getRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${branch}`, { headers: ghHeaders });
+        if (!getRes.ok) {
+            if (getRes.status === 401) throw new Error('Token inválido o vencido');
+            if (getRes.status === 404) throw new Error('No encontré el archivo — revisá owner/repo/rama/ruta');
+            throw new Error(`GitHub respondió HTTP ${getRes.status} al leer el archivo`);
+        }
+        const fileData = await getRes.json();
+        let content = b64DecodeUnicode(fileData.content.replace(/\n/g, ''));
+
+        content = replaceTopLevelBlock(content, 'races', JSON.stringify(adminRaces, null, 4));
+        content = replaceTopLevelBlock(content, 'drivers', JSON.stringify(adminDrivers, null, 4));
+        content = replaceTopLevelBlock(content, 'constructors', JSON.stringify(adminConstructors, null, 4));
+        content = replaceTopLevelBlock(content, 'calendar', JSON.stringify(adminCalendar, null, 4));
+
+        const putRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+            method: 'PUT',
+            headers: { ...ghHeaders, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Actualizar data.js desde el admin — ${new Date().toLocaleString('es-AR')}`,
+                content: b64EncodeUnicode(content),
+                sha: fileData.sha,
+                branch: branch
+            })
+        });
+        if (!putRes.ok) {
+            const err = await putRes.json().catch(() => ({}));
+            throw new Error(err.message || `GitHub respondió HTTP ${putRes.status} al comitear`);
+        }
+        const putData = await putRes.json();
+        document.getElementById('gh-status').textContent =
+            `Última publicación: ${new Date().toLocaleString('es-AR')}`;
+        if (putData.commit && putData.commit.html_url) {
+            linkEl.href = putData.commit.html_url;
+            linkEl.style.display = 'inline';
+        }
+        showToast('🚀 Publicado en GitHub. El sitio se actualiza en 1-2 minutos.');
+    } catch (err) {
+        showToast('Error publicando: ' + err.message, true);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
 }
 
 // ── TAB: SYNC (Jolpica-F1 / OpenF1) ─────────────────────────────────────────────
@@ -1096,6 +1309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initChampionship();
     initCalendarEdit();
     initExport();
+    initGithubPublish();
     initSync();
 
     // ── SPRINT TAB ────────────────────────────────────────────────────────────

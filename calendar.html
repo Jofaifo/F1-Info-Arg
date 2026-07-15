@@ -94,6 +94,12 @@
                 <span class="sched-dot sprint-sched"></span> Sprint &nbsp;
                 <span class="sched-dot race-dot"></span> Carrera
             </div>
+            <div class="calendar-filters" id="calendar-filters">
+                <button class="cal-filter-btn active" data-filter="all">Todas</button>
+                <button class="cal-filter-btn" data-filter="upcoming">Próximas</button>
+                <button class="cal-filter-btn" data-filter="sprint">Con Sprint</button>
+                <button class="cal-filter-btn" data-filter="done">Disputadas</button>
+            </div>
             <!-- El calendario se renderiza dinámicamente desde window.calendar en main.js -->
             <ol class="calendar-list" id="calendar-list-dynamic">
                 <li style="color:var(--muted);padding:1rem">Cargando calendario...</li>
