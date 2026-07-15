@@ -203,6 +203,7 @@
         <div class="admin-tab" data-tab="championship">📊 Campeonato</div>
         <div class="admin-tab" data-tab="calendar-edit">📅 Calendario</div>
         <div class="admin-tab" data-tab="sprint">🏎 Resultado Sprint</div>
+        <div class="admin-tab" data-tab="sync">🔌 Sincronizar (API)</div>
         <div class="admin-tab" data-tab="export">💾 Exportar data.js</div>
     </div>
 
@@ -340,6 +341,43 @@
         <div class="card admin-section" id="sprint-preview-card" style="display:none">
             <h2><span class="section-icon">✅</span> Sprint guardado — vista previa</h2>
             <div id="sprint-preview-content"></div>
+        </div>
+    </div>
+
+    <!-- TAB: Sincronizar con APIs -->
+    <div class="admin-panel" id="panel-sync">
+        <div class="admin-note card">
+            <span>ℹ️</span>
+            <span>Trae datos de <strong>Jolpica-F1</strong> (sucesor de Ergast) y <strong>OpenF1</strong>, dos APIs públicas y gratuitas. Todo lo que traen se carga en los formularios para que <strong>vos revises y confirmes</strong> — nada se guarda solo.</span>
+        </div>
+
+        <div class="card admin-section">
+            <h2><span class="section-icon">🏁</span> Resultados y Standings (Jolpica-F1)</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Ronda</label>
+                    <select id="sync-round"></select>
+                </div>
+            </div>
+            <div class="btn-row" style="margin-top:0.75rem">
+                <button class="btn-primary" id="sync-fetch-race-btn">Traer resultado de carrera →</button>
+                <button class="btn-primary" id="sync-fetch-sprint-btn">Traer resultado Sprint →</button>
+                <button class="btn-secondary" id="sync-standings-btn">Comparar standings</button>
+            </div>
+            <p style="font-size:0.78rem;color:var(--muted);margin:0.75rem 0 0">Trae los datos y te lleva a la tab correspondiente ya prellenada. Ahí revisás y hacés clic en "Guardar" como siempre.</p>
+            <div id="sync-standings-output"></div>
+        </div>
+
+        <div class="card admin-section">
+            <h2><span class="section-icon">🕒</span> Horarios de sesión (OpenF1)</h2>
+            <p style="font-size:0.85rem;color:var(--muted);margin:0 0 1rem">Trae FP1/FP2/FP3/Quali/Sprint/Carrera de toda la temporada y arma el bloque para <code>calendar-sessions.js</code>. Los chips de soporte (F2/F3) y TV no vienen de la API — se mantienen los que ya tenías cargados.</p>
+            <div class="btn-row">
+                <button class="btn-primary" id="sync-sessions-btn">Traer horarios de la temporada →</button>
+            </div>
+            <div id="sync-sessions-output" style="display:none;margin-top:1rem">
+                <div class="code-output" id="sync-sessions-code"></div>
+                <button class="copy-btn" id="sync-sessions-copy-btn">📋 Copiar código</button>
+            </div>
         </div>
     </div>
 
@@ -810,12 +848,255 @@ function copyCode() {
     });
 }
 
+// ── TAB: SYNC (Jolpica-F1 / OpenF1) ─────────────────────────────────────────────
+const JOLPICA_BASE = 'https://api.jolpi.ca/ergast/f1';
+const OPENF1_BASE  = 'https://api.openf1.org/v1';
+const F1_SEASON    = 2026;
+
+function normName(s) {
+    return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function findDriverByFamilyName(familyName) {
+    const target = normName(familyName);
+    return adminDrivers.find(d => normName(d.name).split(' ').pop() === target)
+        || adminDrivers.find(d => normName(d.name).includes(target));
+}
+
+function findConstructorByApiName(apiName) {
+    const target = normName(apiName);
+    return adminConstructors.find(c => normName(c.name) === target)
+        || adminConstructors.find(c => normName(c.name).includes(target) || target.includes(normName(c.name)));
+}
+
+async function jolpicaFetch(path) {
+    const res = await fetch(`${JOLPICA_BASE}/${path}`);
+    if (!res.ok) throw new Error(`Jolpica-F1 respondió ${res.status}`);
+    return res.json();
+}
+
+async function openf1Fetch(path) {
+    const res = await fetch(`${OPENF1_BASE}/${path}`);
+    if (!res.ok) throw new Error(`OpenF1 respondió ${res.status}`);
+    return res.json();
+}
+
+function switchAdminTab(tabName) {
+    document.querySelector(`.admin-tab[data-tab="${tabName}"]`)?.click();
+}
+
+async function syncRaceResult(round) {
+    showToast('Consultando Jolpica-F1…');
+    try {
+        const [resData, qualData] = await Promise.all([
+            jolpicaFetch(`${F1_SEASON}/${round}/results.json`),
+            jolpicaFetch(`${F1_SEASON}/${round}/qualifying.json`).catch(() => null)
+        ]);
+        const race = resData.MRData.RaceTable.Races[0];
+        if (!race) { showToast('Todavía no hay resultado publicado para esa ronda', true); return; }
+
+        document.getElementById('race-round').value = round;
+        document.getElementById('race-round').dispatchEvent(new Event('change'));
+
+        const notFound = [];
+        race.Results.forEach(r => {
+            const d = findDriverByFamilyName(r.Driver.familyName);
+            if (!d) { notFound.push(`${r.Driver.givenName} ${r.Driver.familyName}`); return; }
+            const input = document.getElementById('pos-' + d.slug);
+            if (input) { input.value = r.position; input.dispatchEvent(new Event('input')); }
+        });
+
+        const winnerResult = race.Results.find(r => r.position === '1');
+        const winnerDriver = winnerResult && findDriverByFamilyName(winnerResult.Driver.familyName);
+        if (winnerDriver) document.getElementById('race-winner').value = winnerDriver.slug;
+
+        const flResult = race.Results.find(r => r.FastestLap && r.FastestLap.rank === '1');
+        const flDriver = flResult && findDriverByFamilyName(flResult.Driver.familyName);
+        if (flDriver) document.getElementById('race-fl').value = flDriver.slug;
+
+        if (qualData) {
+            const qRace = qualData.MRData.RaceTable.Races[0];
+            const pole = qRace?.QualifyingResults?.find(q => q.position === '1');
+            const poleDriver = pole && findDriverByFamilyName(pole.Driver.familyName);
+            if (poleDriver) document.getElementById('race-pole').value = poleDriver.slug;
+        }
+
+        switchAdminTab('race-result');
+        showToast(notFound.length
+            ? `Cargado, pero no encontré a: ${notFound.join(', ')} — completalos a mano`
+            : '✅ Datos de la API cargados. Revisá y hacé clic en "Guardar resultado".');
+    } catch (err) {
+        showToast('Error consultando Jolpica-F1: ' + err.message, true);
+    }
+}
+
+async function syncSprintResult(round) {
+    showToast('Consultando Jolpica-F1 (Sprint)…');
+    try {
+        const data = await jolpicaFetch(`${F1_SEASON}/${round}/sprint.json`);
+        const race = data.MRData.RaceTable.Races[0];
+        if (!race || !race.SprintResults) { showToast('No hay resultado de Sprint publicado para esa ronda', true); return; }
+
+        document.getElementById('sprint-round').value = round;
+        document.getElementById('sprint-round').dispatchEvent(new Event('change'));
+
+        const notFound = [];
+        race.SprintResults.forEach(r => {
+            const d = findDriverByFamilyName(r.Driver.familyName);
+            if (!d) { notFound.push(`${r.Driver.givenName} ${r.Driver.familyName}`); return; }
+            const input = document.getElementById('sprint-pos-' + d.slug);
+            if (input) input.value = r.position;
+        });
+
+        const winnerResult = race.SprintResults.find(r => r.position === '1');
+        const winnerDriver = winnerResult && findDriverByFamilyName(winnerResult.Driver.familyName);
+        if (winnerDriver) document.getElementById('sprint-winner').value = winnerDriver.slug;
+
+        switchAdminTab('sprint');
+        showToast(notFound.length
+            ? `Cargado, pero no encontré a: ${notFound.join(', ')} — completalos a mano`
+            : '✅ Datos de Sprint cargados. Revisá y hacé clic en "Guardar Sprint".');
+    } catch (err) {
+        showToast('Error consultando Jolpica-F1: ' + err.message, true);
+    }
+}
+
+async function syncStandingsPreview() {
+    const out = document.getElementById('sync-standings-output');
+    out.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;margin-top:0.75rem">Consultando…</p>';
+    try {
+        const [dStand, cStand] = await Promise.all([
+            jolpicaFetch(`${F1_SEASON}/driverstandings.json`),
+            jolpicaFetch(`${F1_SEASON}/constructorstandings.json`)
+        ]);
+        const dList = dStand.MRData.StandingsTable.StandingsLists[0]?.DriverStandings || [];
+        const cList = cStand.MRData.StandingsTable.StandingsLists[0]?.ConstructorStandings || [];
+
+        let html = '<h3 style="font-size:0.85rem;color:var(--muted);margin:1rem 0 0.5rem">Pilotos — local vs. API</h3><div style="overflow-x:auto"><table class="race-results-table"><thead><tr><th>Piloto</th><th>Local</th><th>API</th></tr></thead><tbody>';
+        dList.forEach(s => {
+            const d = findDriverByFamilyName(s.Driver.familyName);
+            const local = d ? d.points : '—';
+            const flag = d && d.points !== parseInt(s.points) ? ' ⚠️' : '';
+            html += `<tr><td>${s.Driver.givenName} ${s.Driver.familyName}</td><td>${local}</td><td>${s.points}${flag}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+
+        html += '<h3 style="font-size:0.85rem;color:var(--muted);margin:1rem 0 0.5rem">Constructores — local vs. API</h3><div style="overflow-x:auto"><table class="race-results-table"><thead><tr><th>Equipo</th><th>Local</th><th>API</th></tr></thead><tbody>';
+        cList.forEach(s => {
+            const c = findConstructorByApiName(s.Constructor.name);
+            const local = c ? c.points : '—';
+            const flag = c && c.points !== parseInt(s.points) ? ' ⚠️' : '';
+            html += `<tr><td>${s.Constructor.name}</td><td>${local}</td><td>${s.points}${flag}</td></tr>`;
+        });
+        html += '</tbody></table></div><p style="font-size:0.78rem;color:var(--muted);margin-top:0.5rem">⚠️ = diferencia con la API. Si todas las carreras están sincronizadas, debería coincidir.</p>';
+
+        out.innerHTML = html;
+    } catch (err) {
+        out.innerHTML = `<p style="color:#ff6b6b;font-size:0.82rem;margin-top:0.75rem">Error consultando Jolpica-F1: ${err.message}</p>`;
+    }
+}
+
+const SESSION_TYPE_MAP = {
+    'Practice 1': { type: 'fp1', label: 'Práctica 1' },
+    'Practice 2': { type: 'fp2', label: 'Práctica 2' },
+    'Practice 3': { type: 'fp3', label: 'Práctica 3' },
+    'Sprint Qualifying': { type: 'sprint-quali', label: 'Clasificación Sprint' },
+    'Sprint Shootout': { type: 'sprint-quali', label: 'Clasificación Sprint' },
+    'Sprint': { type: 'sprint', label: 'Sprint' },
+    'Qualifying': { type: 'quali', label: 'Clasificación' },
+    'Race': { type: 'race', label: 'Carrera' }
+};
+
+async function syncCalendarSessions() {
+    const out = document.getElementById('sync-sessions-output');
+    out.style.display = 'none';
+    showToast('Consultando OpenF1…');
+    try {
+        const sessions = await openf1Fetch(`sessions?year=${F1_SEASON}`);
+        if (!sessions.length) { showToast(`OpenF1 todavía no tiene sesiones cargadas para ${F1_SEASON}`, true); return; }
+
+        const byMeeting = {};
+        sessions.forEach(s => { (byMeeting[s.meeting_key] = byMeeting[s.meeting_key] || []).push(s); });
+
+        const result = {};
+        const notMatched = [];
+        Object.values(byMeeting).forEach(sessList => {
+            const raceSess = sessList.find(s => s.session_type === 'Race');
+            if (!raceSess) return;
+            const raceDate = raceSess.date_start.slice(0, 10);
+            const round = adminCalendar.find(r => r.date === raceDate);
+            if (!round) { notMatched.push(sessList[0].location || sessList[0].country_name || raceDate); return; }
+
+            const existing = (window.calendarSessions && window.calendarSessions[round.round]) || {};
+            const sessionsOut = sessList
+                .filter(s => SESSION_TYPE_MAP[s.session_name])
+                .sort((a, b) => new Date(a.date_start) - new Date(b.date_start))
+                .map(s => {
+                    const artDate = new Date(new Date(s.date_start).getTime() - 3 * 3600 * 1000); // UTC-3, ARG no usa horario de verano
+                    const dayStr = artDate.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '');
+                    const meta = SESSION_TYPE_MAP[s.session_name];
+                    return {
+                        type: meta.type,
+                        label: meta.label,
+                        day: dayStr.charAt(0).toUpperCase() + dayStr.slice(1),
+                        time: artDate.toISOString().slice(11, 16)
+                    };
+                });
+
+            result[round.round] = {
+                support: existing.support || [],
+                tv: existing.tv || { fox: 'live', disney: 'live' },
+                sessions: sessionsOut
+            };
+        });
+
+        const code = 'window.calendarSessions = ' + JSON.stringify(result, null, 4) + ';';
+        document.getElementById('sync-sessions-code').textContent = code;
+        out.style.display = 'block';
+        showToast(notMatched.length
+            ? `Listo. No pude matchear ${notMatched.length} evento(s) por fecha — revisá manualmente`
+            : '✅ Horarios traídos de OpenF1. Copiá el bloque a calendar-sessions.js');
+    } catch (err) {
+        showToast('Error consultando OpenF1: ' + err.message, true);
+    }
+}
+
+function initSync() {
+    const roundSel = document.getElementById('sync-round');
+    adminCalendar.forEach(r => {
+        const o = document.createElement('option');
+        o.value = r.round;
+        o.textContent = `R${r.round} — ${r.name}`;
+        roundSel.appendChild(o);
+    });
+
+    document.getElementById('sync-fetch-race-btn').addEventListener('click', () => {
+        const round = parseInt(roundSel.value);
+        if (!round) { showToast('Seleccioná una ronda', true); return; }
+        syncRaceResult(round);
+    });
+    document.getElementById('sync-fetch-sprint-btn').addEventListener('click', () => {
+        const round = parseInt(roundSel.value);
+        if (!round) { showToast('Seleccioná una ronda', true); return; }
+        syncSprintResult(round);
+    });
+    document.getElementById('sync-standings-btn').addEventListener('click', syncStandingsPreview);
+    document.getElementById('sync-sessions-btn').addEventListener('click', syncCalendarSessions);
+    document.getElementById('sync-sessions-copy-btn').addEventListener('click', () => {
+        const code = document.getElementById('sync-sessions-code').textContent;
+        navigator.clipboard.writeText(code)
+            .then(() => showToast('📋 Código copiado'))
+            .catch(() => showToast('No se pudo copiar — seleccionalo a mano', true));
+    });
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initRaceResult();
     initChampionship();
     initCalendarEdit();
     initExport();
+    initSync();
 
     // ── SPRINT TAB ────────────────────────────────────────────────────────────
     function initSprint() {
