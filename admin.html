@@ -444,6 +444,41 @@
             </div>
             <p id="gh-status" style="font-size:0.78rem;color:var(--muted);margin:0.75rem 0 0"></p>
         </div>
+
+        <div class="card admin-section">
+            <h2><span class="section-icon">📤</span> Publicar cualquier otro archivo</h2>
+            <p style="font-size:0.85rem;color:var(--muted);margin:0 0 1rem">
+                Para cuando te paso un archivo nuevo por el chat (<code>main.js</code>, <code>style.css</code>, <code>sw.js</code>, etc.):
+                pegás el contenido completo acá y lo comitea al repo, sin copiar/pegar en tu editor ni hacer <code>git push</code>.
+                Usa la misma configuración de arriba (usuario, repo, rama, token).
+            </p>
+            <div class="form-row">
+                <div class="form-group" style="flex:1">
+                    <label>Ruta del archivo en el repo</label>
+                    <input type="text" id="pub-file-path" placeholder="ej: main.js" list="pub-file-suggestions">
+                    <datalist id="pub-file-suggestions">
+                        <option value="main.js">
+                        <option value="index.html">
+                        <option value="style.css">
+                        <option value="calendar.html">
+                        <option value="calendar-sessions.js">
+                        <option value="sw.js">
+                        <option value="admin.html">
+                        <option value="admin-login.html">
+                        <option value="data.js">
+                    </datalist>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Contenido completo del archivo</label>
+                <textarea id="pub-file-content" rows="10" style="width:100%;font-family:'SF Mono',Consolas,monospace;font-size:0.8rem;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text-color);padding:0.75rem" placeholder="Pegá acá el contenido completo del archivo que te pasé por el chat..."></textarea>
+            </div>
+            <div class="btn-row" style="margin-top:0.75rem">
+                <button class="btn-primary" id="publish-file-btn">🚀 Publicar este archivo</button>
+                <a id="publish-file-link" href="#" target="_blank" rel="noopener" style="display:none;color:#6eff99;align-self:center;font-size:0.85rem">Ver commit →</a>
+            </div>
+            <p id="pub-file-status" style="font-size:0.78rem;color:var(--muted);margin:0.75rem 0 0"></p>
+        </div>
         <div class="card admin-section">
             <h2><span class="section-icon">📋</span> Instrucciones</h2>
             <ol style="font-size:0.88rem;color:var(--muted);line-height:2;padding-left:1.25rem;margin:0">
@@ -465,6 +500,7 @@
                 <li>Acá abajo, en <strong>"Publicar automáticamente en GitHub"</strong>, completá usuario, repo, rama y pegá el token.</li>
                 <li>Tocá <strong>"Guardar configuración"</strong> (una sola vez, queda guardado en este navegador).</li>
                 <li>De ahí en más, cargá los resultados como siempre y usá <strong>"🚀 Publicar cambios en GitHub"</strong> en vez de exportar a mano. Cloudflare Pages deploya solo en 1-2 minutos.</li>
+                <li>Para cualquier otro archivo que te pase por el chat (<code>main.js</code>, <code>style.css</code>, etc.), usá la sección <strong>"📤 Publicar cualquier otro archivo"</strong> de acá abajo: pegás el contenido y listo.</li>
             </ol>
         </div>
     </div>
@@ -1008,6 +1044,42 @@ function initGithubPublish() {
     });
 
     document.getElementById('publish-github-btn').addEventListener('click', publishToGithub);
+    document.getElementById('publish-file-btn').addEventListener('click', publishArbitraryFile);
+}
+
+async function commitFileToGithub(cfg, path, content, message) {
+    const branch = cfg.branch || 'main';
+    const ghHeaders = {
+        'Authorization': `Bearer ${cfg.token}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+    };
+
+    const getRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${branch}`, { headers: ghHeaders });
+    let sha;
+    if (getRes.ok) {
+        sha = (await getRes.json()).sha;
+    } else if (getRes.status === 404) {
+        sha = undefined; // el archivo no existe todavía, se crea
+    } else if (getRes.status === 401) {
+        throw new Error('Token inválido o vencido');
+    } else {
+        throw new Error(`GitHub respondió HTTP ${getRes.status} al leer el archivo`);
+    }
+
+    const body = { message, content: b64EncodeUnicode(content), branch };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+        method: 'PUT',
+        headers: { ...ghHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (!putRes.ok) {
+        const err = await putRes.json().catch(() => ({}));
+        throw new Error(err.message || `GitHub respondió HTTP ${putRes.status} al comitear`);
+    }
+    return putRes.json();
 }
 
 async function publishToGithub() {
@@ -1018,7 +1090,6 @@ async function publishToGithub() {
     }
     if (!confirm(`¿Publicar los cambios actuales en ${cfg.owner}/${cfg.repo} (rama ${cfg.branch || 'main'})? Esto comitea directo al repo.`)) return;
 
-    const branch = cfg.branch || 'main';
     const path = cfg.path || 'data.js';
     const btn = document.getElementById('publish-github-btn');
     const linkEl = document.getElementById('publish-github-link');
@@ -1027,14 +1098,11 @@ async function publishToGithub() {
     btn.textContent = 'Publicando…';
     linkEl.style.display = 'none';
 
-    const ghHeaders = {
-        'Authorization': `Bearer ${cfg.token}`,
-        'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28'
-    };
-
     try {
-        const getRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${branch}`, { headers: ghHeaders });
+        const branch = cfg.branch || 'main';
+        const getRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${branch}`, {
+            headers: { 'Authorization': `Bearer ${cfg.token}`, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }
+        });
         if (!getRes.ok) {
             if (getRes.status === 401) throw new Error('Token inválido o vencido');
             if (getRes.status === 404) throw new Error('No encontré el archivo — revisá owner/repo/rama/ruta');
@@ -1048,28 +1116,49 @@ async function publishToGithub() {
         content = replaceTopLevelBlock(content, 'constructors', JSON.stringify(adminConstructors, null, 4));
         content = replaceTopLevelBlock(content, 'calendar', JSON.stringify(adminCalendar, null, 4));
 
-        const putRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
-            method: 'PUT',
-            headers: { ...ghHeaders, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: `Actualizar data.js desde el admin — ${new Date().toLocaleString('es-AR')}`,
-                content: b64EncodeUnicode(content),
-                sha: fileData.sha,
-                branch: branch
-            })
-        });
-        if (!putRes.ok) {
-            const err = await putRes.json().catch(() => ({}));
-            throw new Error(err.message || `GitHub respondió HTTP ${putRes.status} al comitear`);
-        }
-        const putData = await putRes.json();
-        document.getElementById('gh-status').textContent =
-            `Última publicación: ${new Date().toLocaleString('es-AR')}`;
+        const putData = await commitFileToGithub(cfg, path, content, `Actualizar data.js desde el admin — ${new Date().toLocaleString('es-AR')}`);
+        document.getElementById('gh-status').textContent = `Última publicación: ${new Date().toLocaleString('es-AR')}`;
         if (putData.commit && putData.commit.html_url) {
             linkEl.href = putData.commit.html_url;
             linkEl.style.display = 'inline';
         }
         showToast('🚀 Publicado en GitHub. El sitio se actualiza en 1-2 minutos.');
+    } catch (err) {
+        showToast('Error publicando: ' + err.message, true);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+async function publishArbitraryFile() {
+    const cfg = getGithubConfig();
+    if (!cfg || !cfg.owner || !cfg.repo || !cfg.token) {
+        showToast('Completá y guardá la configuración de GitHub (arriba) primero', true);
+        return;
+    }
+    const path = document.getElementById('pub-file-path').value.trim();
+    const content = document.getElementById('pub-file-content').value;
+    if (!path) { showToast('Falta la ruta del archivo', true); return; }
+    if (!content) { showToast('Pegá el contenido del archivo primero', true); return; }
+    if (!confirm(`¿Publicar "${path}" en ${cfg.owner}/${cfg.repo} (rama ${cfg.branch || 'main'})? Esto reemplaza el archivo entero.`)) return;
+
+    const btn = document.getElementById('publish-file-btn');
+    const linkEl = document.getElementById('publish-file-link');
+    const statusEl = document.getElementById('pub-file-status');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Publicando…';
+    linkEl.style.display = 'none';
+
+    try {
+        const putData = await commitFileToGithub(cfg, path, content, `Actualizar ${path} desde el admin — ${new Date().toLocaleString('es-AR')}`);
+        statusEl.textContent = `✅ "${path}" publicado — ${new Date().toLocaleString('es-AR')}`;
+        if (putData.commit && putData.commit.html_url) {
+            linkEl.href = putData.commit.html_url;
+            linkEl.style.display = 'inline';
+        }
+        showToast(`🚀 "${path}" publicado en GitHub.`);
     } catch (err) {
         showToast('Error publicando: ' + err.message, true);
     } finally {

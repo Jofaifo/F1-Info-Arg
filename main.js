@@ -24,7 +24,15 @@ function searcher(query) {
         )
         .map(team => ({ ...team, type: 'constructor' }));
 
-    return [...driverMatches, ...constructorMatches];
+    const circuitMatches = (window.circuits || [])
+        .filter(c =>
+            c.name.toLowerCase().includes(q) ||
+            (c.city && c.city.toLowerCase().includes(q)) ||
+            (c.country && c.country.toLowerCase().includes(q))
+        )
+        .map(c => ({ ...c, type: 'circuit' }));
+
+    return [...driverMatches, ...constructorMatches, ...circuitMatches];
 }
 
 function createTeamCell(teamName, code, colorClass, teamSlug) {
@@ -176,6 +184,19 @@ function renderSearchResults(results) {
     results.forEach(entry => {
         const li = document.createElement('li');
         li.className = 'search-result-item';
+
+        if (entry.type === 'circuit') {
+            li.innerHTML = `
+                <div class="search-result-content">
+                    <strong>${entry.flag || ''} ${entry.name}</strong>
+                    <span class="result-type">Circuito</span>
+                    <span class="result-points">${entry.city ? entry.city + ', ' : ''}${entry.country || ''}</span>
+                </div>
+                <a class="detail-link-inline" href="circuits.html#cc-${entry.slug}">Ver circuito</a>
+            `;
+            resultsList.appendChild(li);
+            return;
+        }
 
         const label = entry.type === 'driver' ? 'Piloto' : 'Escudería';
         const link = entry.type === 'driver' ? `driver.html?slug=${entry.slug}` : `team.html?slug=${entry.slug}`;
@@ -598,6 +619,63 @@ function initCalendarFilters() {
     });
 }
 
+const SESSION_DURATION_MIN = {
+    fp1: 60, fp2: 60, fp3: 60,
+    quali: 60, 'sprint-quali': 45,
+    sprint: 40, race: 130
+};
+const MONTH_ABBR = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep:8, oct:9, nov:10, dic:11 };
+
+function parseSessionDate(dayStr, timeStr, year) {
+    // dayStr viene como "Sáb 18 jul" — nombre del día, número, mes abreviado
+    const m = dayStr.match(/(\d{1,2})\s+([a-záéíóú]{3})/i);
+    if (!m || !timeStr) return null;
+    const day = parseInt(m[1]);
+    const month = MONTH_ABBR[m[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')];
+    if (month === undefined) return null;
+    // Forzamos -03:00 (hora Argentina) explícito, igual que el countdown,
+    // para que la detección no dependa de la zona horaria del visitante.
+    const mm = String(month + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    return new Date(`${year}-${mm}-${dd}T${timeStr}:00-03:00`);
+}
+
+function renderLiveSessionBanner() {
+    const el = document.getElementById('live-session-card');
+    if (!el || !window.calendar || !window.calendarSessions) return;
+
+    const candidates = window.calendar.filter(r => r.status === 'next' || r.status === 'upcoming');
+    const now = new Date();
+    let liveSession = null, liveRace = null;
+
+    for (const race of candidates) {
+        const sess = window.calendarSessions[race.round];
+        if (!sess || !sess.sessions) continue;
+        for (const s of sess.sessions) {
+            const start = parseSessionDate(s.day, s.time, parseInt(race.date.slice(0, 4)));
+            if (!start) continue;
+            const durMin = SESSION_DURATION_MIN[s.type] || 60;
+            const end = new Date(start.getTime() + durMin * 60000);
+            if (now >= start && now <= end) { liveSession = s; liveRace = race; break; }
+        }
+        if (liveSession) break;
+    }
+
+    if (!liveSession) { el.style.display = 'none'; return; }
+
+    el.style.display = '';
+    el.innerHTML = `
+        <div class="live-session-inner">
+            <span class="live-dot"></span>
+            <div class="live-session-text">
+                <strong>¡EN VIVO AHORA!</strong>
+                <span>${liveSession.label} — ${liveRace.flag} ${liveRace.name}</span>
+            </div>
+            <a href="calendar.html" class="live-session-link">Ver calendario →</a>
+        </div>
+    `;
+}
+
 function renderHomeStats() {
     if (!window.calendar) return;
     const done = window.calendar.filter(r => r.status === 'done').length;
@@ -620,6 +698,8 @@ function initPage() {
         renderHomeStats();
         renderChampionshipLeaders();
         renderCountdown();
+        renderLiveSessionBanner();
+        setInterval(renderLiveSessionBanner, 60000);
         return;
     }
     if (body.classList.contains('page-search')) {
@@ -2282,13 +2362,14 @@ function renderPredictor() {
         };
         const actuals = [findByPosition(1), findByPosition(2), findByPosition(3)];
 
-        let score = 0, max = 9;
+        let score = 0, max = 11;
         ['p1','p2','p3'].forEach((pos, i) => {
             if (!pred[pos] || !actuals[i]) return;
             if (pred[pos] === actuals[i]) score += 3;
             else if (actuals.includes(pred[pos])) score += 1;
         });
-        return { score, max, pct: Math.round((score/3)*100) };
+        if (pred.fl && actual.fastestLap && pred.fl === actual.fastestLap) score += 2;
+        return { score, max, pct: Math.round((score/max)*100) };
     }
 
     // Build prediction form for next race
@@ -2315,6 +2396,14 @@ function renderPredictor() {
                         </select>
                     </div>`).join('')}
             </div>
+            <div class="pred-pos-group" style="margin-top:0.85rem">
+                <div class="pred-pos-medal">⚡</div>
+                <label class="pred-pos-label">Vuelta rápida</label>
+                <select class="pred-select" id="pred-fl">
+                    <option value="">— Elegir piloto —</option>
+                    ${driverOptions}
+                </select>
+            </div>
             <button class="btn-primary pred-save-btn" id="pred-save-btn" style="margin-top:1rem">
                 Guardar predicción 🎯
             </button>
@@ -2340,7 +2429,7 @@ function renderPredictor() {
             <div class="pred-hist-header">
                 <span class="pred-hist-race">${race.flag} ${race.name}</span>
                 ${s ? `<span class="pred-hist-score" style="color:${s.pct >= 66 ? '#6eff99' : s.pct >= 33 ? '#ffcc00' : '#ff6b6b'}">
-                    ${s.score}/3 pts
+                    ${s.score}/${s.max} pts
                 </span>` : '<span class="pred-hist-score" style="color:var(--muted)">Sin predicción</span>'}
             </div>
             <div class="pred-hist-compare">
@@ -2351,6 +2440,7 @@ function renderPredictor() {
                             <span class="pred-hist-pos">${['🥇','🥈','🥉'][i]}</span>
                             <span class="pred-hist-name">${pred[p] || '—'}</span>
                         </div>`).join('') : '<p style="color:var(--muted);font-size:0.82rem">No predijiste esta carrera</p>'}
+                    ${pred && pred.fl ? `<div class="pred-hist-row"><span class="pred-hist-pos">⚡</span><span class="pred-hist-name">${pred.fl}</span></div>` : ''}
                 </div>
                 <div class="pred-hist-divider"></div>
                 <div class="pred-hist-col">
@@ -2360,6 +2450,7 @@ function renderPredictor() {
                             <span class="pred-hist-pos">${medal}</span>
                             <span class="pred-hist-name"${podium[i] ? '' : ' style="color:var(--muted)"'}>${podium[i] || '—'}</span>
                         </div>`).join('')}
+                    <div class="pred-hist-row"><span class="pred-hist-pos">⚡</span><span class="pred-hist-name"${actual?.fastestLap ? '' : ' style="color:var(--muted)"'}>${actual?.fastestLap || '—'}</span></div>
                 </div>
             </div>
         </div>`;
@@ -2373,6 +2464,25 @@ function renderPredictor() {
     });
     const totalPct = totalMax > 0 ? Math.round((totalScore/totalMax)*100) : 0;
 
+    // Stats de precisión (no hay backend para un ranking entre usuarios,
+    // así que mostramos tu propio track record)
+    let exactWinners = 0, flHits = 0, fullPodiums = 0, predictedRaces = 0;
+    doneRaces.forEach(race => {
+        const pred = preds[race.round];
+        if (!pred) return;
+        const actual = window.races.find(r => r.round === race.round);
+        if (!actual) return;
+        predictedRaces++;
+        const roundIdx = window.races.findIndex(r => r.round === race.round);
+        const podium = [1, 2, 3].map(pos => {
+            const d = window.drivers.find(dr => (dr.raceResults || [])[roundIdx] === pos);
+            return d ? d.name : (pos === 1 ? actual.winner : null);
+        });
+        if (pred.p1 && pred.p1 === podium[0]) exactWinners++;
+        if (pred.p1 === podium[0] && pred.p2 === podium[1] && pred.p3 === podium[2] && podium[0]) fullPodiums++;
+        if (pred.fl && actual.fastestLap && pred.fl === actual.fastestLap) flHits++;
+    });
+
     el.innerHTML = `
         ${nextForm}
         ${totalMax > 0 ? `
@@ -2380,6 +2490,12 @@ function renderPredictor() {
             <div class="pred-score-label">Tu puntaje total</div>
             <div class="pred-score-value" style="color:${totalPct>=66?'#6eff99':totalPct>=33?'#ffcc00':'#ff6b6b'}">${totalScore} <span style="font-size:1rem;color:var(--muted)">/ ${totalMax} pts posibles</span></div>
             <div class="pred-score-bar-track"><div class="pred-score-bar" style="width:${totalPct}%;background:${totalPct>=66?'#6eff99':totalPct>=33?'#ffcc00':'#ff6b6b'}"></div></div>
+            <div class="pred-accuracy-grid">
+                <div class="pred-accuracy-item"><div class="pred-accuracy-num">${predictedRaces}</div><div class="pred-accuracy-label">Carreras predichas</div></div>
+                <div class="pred-accuracy-item"><div class="pred-accuracy-num">${exactWinners}</div><div class="pred-accuracy-label">Ganador acertado</div></div>
+                <div class="pred-accuracy-item"><div class="pred-accuracy-num">${fullPodiums}</div><div class="pred-accuracy-label">Podio exacto</div></div>
+                <div class="pred-accuracy-item"><div class="pred-accuracy-num">${flHits}</div><div class="pred-accuracy-label">Vuelta rápida</div></div>
+            </div>
         </div>` : ''}
         ${historyCards ? `<div>
             <h3 style="font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin:0.5rem 0 0.75rem">Historial de predicciones</h3>
@@ -2389,7 +2505,7 @@ function renderPredictor() {
 
     // Pre-fill saved values
     if (nextRace) {
-        ['p1','p2','p3'].forEach(pos => {
+        ['p1','p2','p3','fl'].forEach(pos => {
             const sel = document.getElementById(`pred-${pos}`);
             if (sel && nextPred[pos]) sel.value = nextPred[pos];
         });
@@ -2397,9 +2513,10 @@ function renderPredictor() {
             const p1 = document.getElementById('pred-p1')?.value;
             const p2 = document.getElementById('pred-p2')?.value;
             const p3 = document.getElementById('pred-p3')?.value;
-            if (!p1 && !p2 && !p3) return;
+            const fl = document.getElementById('pred-fl')?.value;
+            if (!p1 && !p2 && !p3 && !fl) return;
             const all = loadPredictions();
-            all[nextRace.round] = { p1, p2, p3, savedAt: new Date().toISOString() };
+            all[nextRace.round] = { p1, p2, p3, fl, savedAt: new Date().toISOString() };
             savePredictions(all);
             const msg = document.getElementById('pred-saved-msg');
             if (msg) { msg.style.display = ''; setTimeout(() => msg.style.display = 'none', 3000); }
@@ -2721,7 +2838,7 @@ function initGlobalSearch() {
             if (score > 0) results.push({
                 type: 'circuit', score,
                 title: c.name, sub: `${c.country} · ${c.length} km`,
-                href: `circuits.html`,
+                href: `circuits.html#cc-${c.slug}`,
                 color: c.color || '#888',
                 icon: c.flag || '🏁'
             });

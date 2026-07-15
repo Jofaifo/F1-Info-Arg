@@ -1184,6 +1184,20 @@ p { margin: 0 0 1rem; color: var(--muted); }
 .countdown-live { font-size: 1.4rem; font-weight: 800; color: var(--accent-color); animation: pulse 1s ease-in-out infinite alternate; }
 @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
 
+/* ─── SESIÓN EN VIVO ─────────────────────────────────────────────── */
+.live-session-card {
+    background: linear-gradient(135deg, rgba(255,33,33,0.14), rgba(15,15,15,0.98));
+    border-color: rgba(255,33,33,0.35);
+    padding: 1.1rem 1.5rem;
+}
+.live-session-inner { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
+.live-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent-color); flex-shrink: 0; animation: pulse 1s ease-in-out infinite alternate; box-shadow: 0 0 10px var(--accent-color); }
+.live-session-text { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; min-width: 200px; }
+.live-session-text strong { color: var(--accent-color); font-size: 1.05rem; letter-spacing: 0.02em; }
+.live-session-text span { color: var(--text-color); font-size: 0.9rem; }
+.live-session-link { color: var(--accent-color); font-weight: 700; font-size: 0.85rem; white-space: nowrap; }
+.live-session-link:hover { text-decoration: underline; }
+
 /* ─── PÁGINA DE BÚSQUEDA ─────────────────────────────────────────── */
 .search-main-card { padding: 1.75rem; }
 
@@ -1559,6 +1573,38 @@ p { margin: 0 0 1rem; color: var(--muted); }
     align-self: end;
     text-align: center;
 }
+/* Botones genéricos usados en páginas públicas (predictor, trivia, etc.) */
+.btn-primary {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+.btn-primary:hover { background: #ff4444; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+.btn-secondary {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-color);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.12); }
+[data-theme="light"] .btn-secondary { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.15); }
+[data-theme="light"] .btn-secondary:hover { background: rgba(0,0,0,0.08); }
+
 .compare-btn {
     display: block;
     width: 100%;
@@ -2161,6 +2207,10 @@ p { margin: 0 0 1rem; color: var(--muted); }
 .pred-score-value { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.6rem; }
 .pred-score-bar-track { height: 8px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; max-width: 300px; margin: 0 auto; }
 .pred-score-bar { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+.pred-accuracy-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); }
+.pred-accuracy-num { font-size: 1.4rem; font-weight: 900; color: var(--text-color); }
+.pred-accuracy-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.2rem; line-height: 1.3; }
+@media (max-width: 600px) { .pred-accuracy-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
 .pred-history-grid { display: grid; gap: 0.85rem; }
 .pred-hist-card { padding: 1rem 1.25rem; }
 .pred-hist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
@@ -2347,6 +2397,14 @@ p { margin: 0 0 1rem; color: var(--muted); }
 }
 [data-theme="light"] .glossary-item { background: #fafafa; }
 [data-theme="light"] .swipe-btn { background: rgba(0,0,0,0.06); color: #333; border-color: rgba(0,0,0,0.12); }
+[data-theme="light"] .trivia-opt-btn { background: rgba(0,0,0,0.03); color: #111122; border-color: rgba(0,0,0,0.12); }
+[data-theme="light"] .trivia-opt-btn:hover:not(:disabled) { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.25); }
+[data-theme="light"] .today-nav-btn { background: rgba(0,0,0,0.04); color: #111122; border-color: rgba(0,0,0,0.12); }
+[data-theme="light"] .today-nav-btn:hover { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .glossary-cat-btn { border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.03); }
+[data-theme="light"] .pwa-dismiss-btn { border-color: rgba(0,0,0,0.15); }
+[data-theme="light"] .pwa-dismiss-btn:hover { background: rgba(0,0,0,0.06); }
+[data-theme="light"] .cal-filter-btn { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); }
 [data-theme="light"] .pwa-banner { background: #ffffff; border-color: rgba(0,0,0,0.12); }
 
 /* ─── THEME TOGGLE BUTTON ────────────────────────────────────────────────────── */
