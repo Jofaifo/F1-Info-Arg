@@ -1,5 +1,5 @@
-// F1 Info ARG — Service Worker v1
-const CACHE_NAME = 'f1arg-v3';
+// F1 Info ARG — Service Worker v4
+const CACHE_NAME = 'f1arg-v4';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -48,8 +48,10 @@ self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
     if (event.request.method !== 'GET') return;
 
-    // Cache-first for JS/CSS/images/fonts
-    if (/\.(js|css|jpg|jpeg|png|svg|gif|ico|woff2?)$/.test(url.pathname)) {
+    // Cache-first solo para imágenes/fuentes (cambian poco). JS y CSS van
+    // network-first más abajo, para que un deploy nuevo se vea al toque
+    // y no dependa de acordarse de bumpear CACHE_NAME cada vez.
+    if (/\.(jpg|jpeg|png|svg|gif|ico|woff2?)$/.test(url.pathname)) {
         event.respondWith(
             caches.match(event.request).then(cached => {
                 if (cached) return cached;
@@ -63,7 +65,8 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Network-first for HTML pages
+    // Network-first para HTML, JS y CSS: siempre intenta traer la versión
+    // más nueva del servidor, y solo cae a la caché si no hay conexión.
     event.respondWith(
         fetch(event.request)
             .then(res => {
