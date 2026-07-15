@@ -415,8 +415,8 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Usuario / organización</label>
-                    <input type="text" id="gh-owner" placeholder="ej: juaniignacio">
+                    <label>Usuario / organización (el de la URL de GitHub, ej: github.com/<strong>Jofaifo</strong>)</label>
+                    <input type="text" id="gh-owner" placeholder="ej: Jofaifo — NO tu nombre real">
                 </div>
                 <div class="form-group">
                     <label>Repositorio</label>
@@ -452,6 +452,19 @@
                 <li>Ir a <strong>Exportar data.js</strong> y exportar el bloque que cambió.</li>
                 <li>Copiar el código y reemplazar el bloque correspondiente en <code>data.js</code>.</li>
                 <li>¡Listo! El sitio muestra los datos actualizados.</li>
+            </ol>
+        </div>
+
+        <div class="card admin-section">
+            <h2><span class="section-icon">🚀</span> Instrucciones — Publicar automático (GitHub)</h2>
+            <ol style="font-size:0.88rem;color:var(--muted);line-height:2;padding-left:1.25rem;margin:0">
+                <li>Andá a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:#6eff99">GitHub → generar Fine-grained token</a>.</li>
+                <li>En <strong>"Repository access"</strong> elegí <strong>"Only select repositories"</strong> y marcá solo el repo de esta página — nunca le des acceso a todos.</li>
+                <li>En <strong>"Permissions" → "Contents"</strong> ponelo en <strong>"Read and write"</strong>. El resto, sin acceso.</li>
+                <li>Generá el token y copialo — GitHub solo lo muestra una vez.</li>
+                <li>Acá abajo, en <strong>"Publicar automáticamente en GitHub"</strong>, completá usuario, repo, rama y pegá el token.</li>
+                <li>Tocá <strong>"Guardar configuración"</strong> (una sola vez, queda guardado en este navegador).</li>
+                <li>De ahí en más, cargá los resultados como siempre y usá <strong>"🚀 Publicar cambios en GitHub"</strong> en vez de exportar a mano. Cloudflare Pages deploya solo en 1-2 minutos.</li>
             </ol>
         </div>
     </div>
@@ -979,6 +992,10 @@ function initGithubPublish() {
         const tokenInput = document.getElementById('gh-token').value.trim();
 
         if (!owner || !repo) { showToast('Completá usuario y repositorio', true); return; }
+        if (/\s/.test(owner)) {
+            showToast('El usuario no debería tener espacios — usá tu username de GitHub (el de la URL), no tu nombre real', true);
+            return;
+        }
 
         const prev = getGithubConfig();
         const token = tokenInput || (prev && prev.token) || '';
