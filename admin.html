@@ -1358,7 +1358,7 @@ async function syncCalendarSessions() {
                         type: meta.type,
                         label: meta.label,
                         day: dayStr.charAt(0).toUpperCase() + dayStr.slice(1),
-                        time: artDate.toISOString().slice(11, 16)
+                        time: artDate.toISOString().slice(11, 16) + ' hs'
                     };
                 });
 

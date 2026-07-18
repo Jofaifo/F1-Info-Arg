@@ -629,7 +629,8 @@ const MONTH_ABBR = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep
 function parseSessionDate(dayStr, timeStr, year) {
     // dayStr viene como "Sáb 18 jul" — nombre del día, número, mes abreviado
     const m = dayStr.match(/(\d{1,2})\s+([a-záéíóú]{3})/i);
-    if (!m || !timeStr) return null;
+    const tm = (timeStr || '').match(/(\d{1,2}:\d{2})/); // acepta '10:00' o '10:00 hs'
+    if (!m || !tm) return null;
     const day = parseInt(m[1]);
     const month = MONTH_ABBR[m[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')];
     if (month === undefined) return null;
@@ -637,7 +638,7 @@ function parseSessionDate(dayStr, timeStr, year) {
     // para que la detección no dependa de la zona horaria del visitante.
     const mm = String(month + 1).padStart(2, '0');
     const dd = String(day).padStart(2, '0');
-    return new Date(`${year}-${mm}-${dd}T${timeStr}:00-03:00`);
+    return new Date(`${year}-${mm}-${dd}T${tm[1]}:00-03:00`);
 }
 
 function renderLiveSessionBanner() {

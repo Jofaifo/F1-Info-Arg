@@ -107,10 +107,10 @@ window.calendarSessions = {
         support: ['f2','f3'],
         tv: { fox: 'live', disney: 'live' },
         sessions: [
-            { type:'fp',   label:'Práctica 1',   day:'Vie 17 jul', time:'14:30 hs' },
-            { type:'fp',   label:'Práctica 2',   day:'Vie 17 jul', time:'18:00 hs' },
-            { type:'fp',   label:'Práctica 3',   day:'Sáb 18 jul', time:'13:30 hs' },
-            { type:'qual', label:'Clasificación',day:'Sáb 18 jul', time:'17:00 hs' },
+            { type:'fp',   label:'Práctica 1',   day:'Vie 17 jul', time:'08:30 hs' },
+            { type:'fp',   label:'Práctica 2',   day:'Vie 17 jul', time:'12:00 hs' },
+            { type:'fp',   label:'Práctica 3',   day:'Sáb 18 jul', time:'07:30 hs' },
+            { type:'qual', label:'Clasificación',day:'Sáb 18 jul', time:'11:00 hs' },
             { type:'race', label:'Carrera',      day:'Dom 19 jul', time:'10:00 hs' },
         ]
     },
