@@ -2467,6 +2467,10 @@ p { margin: 0 0 1rem; color: var(--muted); }
     transition: background 0.2s; margin-top: 0.75rem;
 }
 .share-img-btn:hover { background: rgba(255,255,255,0.12); }
+[data-theme="light"] .share-img-btn { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.15); color: #111122; }
+[data-theme="light"] .share-img-btn:hover { background: rgba(0,0,0,0.08); }
+
+.cmp-share-row { text-align: center; margin-top: 0.5rem; }
 
 .share-fab-btn {
     position: fixed; bottom: 5rem; right: 1.5rem;

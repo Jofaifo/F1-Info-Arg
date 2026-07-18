@@ -978,7 +978,15 @@ function runCompare() {
                 <tbody>${raceRows}</tbody>
             </table>
         </div>` : ''}
+
+        <div class="cmp-share-row">
+            <button class="share-img-btn" id="cmp-share-btn">📤 Compartir comparación</button>
+        </div>
     `;
+
+    document.getElementById('cmp-share-btn')?.addEventListener('click', () => {
+        shareComparison(dA, dB, colA, colB, posA, posB);
+    });
 }
 
 // ─── CIRCUITOS ───────────────────────────────────────────────────────────────
@@ -3131,6 +3139,122 @@ function shareStandings() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url; a.download = 'f1-standings-2026.png';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    }, 'image/png');
+}
+
+function shareComparison(dA, dB, colA, colB, posA, posB) {
+    const canvas = document.createElement('canvas');
+    const W = 560, H = 460;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#0f0f1a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Header
+    const grad = ctx.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0, '#1a0a0a');
+    grad.addColorStop(1, '#0f0f1a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 70);
+    ctx.fillStyle = '#E10600';
+    ctx.fillRect(0, 0, 4, 70);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText('F1 Info ARG · Comparador de pilotos', 24, 34);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = '13px Arial';
+    ctx.fillText('Temporada 2026', 24, 54);
+
+    // Nombres enfrentados
+    ctx.textAlign = 'left';
+    ctx.fillStyle = colA;
+    ctx.font = 'bold 22px Arial';
+    ctx.fillText(dA.name, 24, 112);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '13px Arial';
+    ctx.fillText(`${dA.team} · P${posA}`, 24, 132);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = colB;
+    ctx.font = 'bold 22px Arial';
+    ctx.fillText(dB.name, W - 24, 112);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '13px Arial';
+    ctx.fillText(`${dB.team} · P${posB}`, W - 24, 132);
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('VS', W / 2, 118);
+    ctx.textAlign = 'left';
+
+    // Barras de stats
+    const stats = [
+        ['Puntos', dA.points, dB.points],
+        ['Victorias', dA.wins, dB.wins],
+        ['Podios', dA.podiums, dB.podiums],
+        ['Poles', dA.poles || 0, dB.poles || 0],
+        ['V. Rápidas', dA.fastestLaps || 0, dB.fastestLaps || 0],
+    ];
+    let y = 175;
+    const rowH = 56, barW = 190, midX = W / 2;
+    stats.forEach(([label, valA, valB]) => {
+        const maxVal = Math.max(valA, valB, 1);
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, midX, y - 6);
+
+        // Track
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(midX - 12 - barW, y, barW, 14);
+        ctx.fillRect(midX + 12, y, barW, 14);
+
+        // Fill A (crece hacia la izquierda desde el centro)
+        const wA = (valA / maxVal) * barW;
+        ctx.fillStyle = colA;
+        ctx.fillRect(midX - 12 - wA, y, wA, 14);
+        // Fill B
+        const wB = (valB / maxVal) * barW;
+        ctx.fillStyle = colB;
+        ctx.fillRect(midX + 12, y, wB, 14);
+
+        // Valores
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText(String(valA), midX - 12 - barW - 8, y + 12);
+        ctx.textAlign = 'left';
+        ctx.fillText(String(valB), midX + 12 + barW + 8, y + 12);
+
+        y += rowH;
+    });
+
+    // Footer
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillRect(0, H - 40, W, 40);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('F1 Info ARG · @formula1arg__ en Instagram', 20, H - 16);
+
+    canvas.toBlob(blob => {
+        const filename = `f1-comparacion-${dA.slug}-vs-${dB.slug}.png`;
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: 'image/png' })] })) {
+            navigator.share({
+                title: 'F1 Info ARG — Comparador',
+                text: `${dA.name} vs. ${dB.name}`,
+                files: [new File([blob], filename, { type: 'image/png' })]
+            });
+        } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
             a.click();
             URL.revokeObjectURL(url);
         }

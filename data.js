@@ -52,7 +52,7 @@ window.drivers = [
         nationality: 'Británico', age: 27,
         wins: 2, podiums: 7, poles: 6, fastestLaps: 2,
         bio: 'Russell mantiene el ritmo de Mercedes con actuaciones consistentes y rápidas en clasificación.',
-        raceResults: [1, 2, 4, 2, 2, 12, 2, 1, 2],
+        raceResults: [1, 2, 4, 4, 2, 12, 2, 1, 2],
     },
     {
         slug: 'charles-leclerc',
@@ -130,7 +130,7 @@ window.drivers = [
         nationality: 'Francés', age: 29,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Gasly aporta velocidad y solidez a Alpine con puntos clave en cada carrera.',
-        raceResults: [8, 8, 9, 8, 14, 7, 7, 13, 10],
+        raceResults: [8, 8, 9, 21, 14, 7, 7, 13, 10],
     },
     {
         slug: 'oliver-bearman',
@@ -143,7 +143,7 @@ window.drivers = [
         nationality: 'Británico', age: 20,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Joven talento en Haas que ya sumó puntos importantes y demostró gran adaptabilidad.',
-        raceResults: [9, 9, 8, 9, 9, null, 17, 14, 12],
+        raceResults: [9, 9, 8, 11, 9, null, 17, 14, 12],
     },
     {
         slug: 'liam-lawson',
@@ -156,7 +156,7 @@ window.drivers = [
         nationality: 'Neozelandés', age: 23,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Lawson aporta ritmo y consistencia al equipo Racing Bulls en su primera temporada completa.',
-        raceResults: [10, 10, 10, 10, 10, 5, 8, 9, 6],
+        raceResults: [10, 10, 10, 20, 10, 5, 8, 9, 6],
     },
     {
         slug: 'franco-colapinto',
@@ -182,7 +182,7 @@ window.drivers = [
         nationality: 'Francés', age: 19,
         wins: 0, podiums: 1, poles: 0, fastestLaps: 0,
         bio: 'Promesa de Red Bull que ya suma puntos importantes y acelera carrera a carrera.',
-        raceResults: [11, 11, 11, 11, 11, 3, 6, 6, 5],
+        raceResults: [11, 11, 11, 22, 11, 3, 6, 6, 5],
     },
     {
         slug: 'carlos-sainz',
@@ -195,7 +195,7 @@ window.drivers = [
         nationality: 'Español', age: 30,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Sainz suma puntos importantes y da experiencia clave al proyecto de Williams.',
-        raceResults: [12, 12, 12, 12, 13, null, 12, 20, 17],
+        raceResults: [12, 12, 12, 9, 13, null, 12, 20, 17],
     },
     {
         slug: 'arvid-lindblad',
@@ -208,7 +208,7 @@ window.drivers = [
         nationality: 'Sueco', age: 18,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Lindblad aporta consistencia a Racing Bulls con un buen ritmo de carrera en su debut en F1.',
-        raceResults: [13, 13, 13, 13, 12, 6, 9, 10, 7],
+        raceResults: [13, 13, 13, 14, 12, 6, 9, 10, 7],
     },
     {
         slug: 'gabriel-bortoleto',
@@ -221,7 +221,7 @@ window.drivers = [
         nationality: 'Brasileño', age: 20,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Rookie de Audi que ya logró sus primeros puntos en la temporada inaugural del equipo alemán.',
-        raceResults: [16, 14, 14, 14, 15, 11, 11, 11, 8],
+        raceResults: [16, 14, 14, 12, 15, 11, 11, 11, 8],
     },
     {
         slug: 'esteban-ocon',
@@ -234,7 +234,7 @@ window.drivers = [
         nationality: 'Francés', age: 28,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Ocon aporta experiencia y puntos valiosos para Haas en esta nueva etapa de su carrera.',
-        raceResults: [15, 15, 15, 15, 16, 9, 13, 16, 13],
+        raceResults: [15, 15, 15, 13, 16, 9, 13, 16, 13],
     },
     {
         slug: 'alexander-albon',
@@ -247,7 +247,7 @@ window.drivers = [
         nationality: 'Tailandés', age: 29,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Albon ayuda a Williams con actuaciones sólidas y un estilo de manejo agresivo.',
-        raceResults: [17, 16, 17, 16, 8, 8, 18, 17, 21],
+        raceResults: [17, 16, 17, 10, 8, 8, 18, 17, 21],
     },
     {
         slug: 'nico-hulkenberg',
@@ -260,7 +260,7 @@ window.drivers = [
         nationality: 'Alemán', age: 37,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Hülkenberg aporta experiencia y estabilidad al ambicioso proyecto de Audi en Fórmula 1.',
-        raceResults: [18, 17, 18, 17, 17, 13, 20, 12, 22],
+        raceResults: [18, 17, 18, 19, 17, 13, 20, 12, 22],
     },
     {
         slug: 'valtteri-bottas',
@@ -286,7 +286,7 @@ window.drivers = [
         nationality: 'Mexicano', age: 35,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Pérez aporta experiencia y liderazgo a Cadillac en su primera temporada en la parrilla.',
-        raceResults: [20, 19, 20, 19, 19, 15, 14, 21, 14],
+        raceResults: [20, 19, 20, 16, 19, 15, 14, 21, 14],
     },
     {
         slug: 'lance-stroll',
@@ -299,7 +299,7 @@ window.drivers = [
         nationality: 'Canadiense', age: 26,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Stroll sigue trabajando para encontrar el ritmo en el Aston Martin de nueva generación.',
-        raceResults: [21, 20, 21, 20, 20, null, 22, 19, 19],
+        raceResults: [21, 20, 21, 17, 20, null, 22, 19, 19],
     },
     {
         slug: 'fernando-alonso',
@@ -312,7 +312,7 @@ window.drivers = [
         nationality: 'Español', age: 44,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Alonso aporta experiencia y sabiduría incomparables a Aston Martin en esta temporada de reinicio.',
-        raceResults: [22, 21, 22, 21, 21, 10, 19, 18, 18],
+        raceResults: [22, 21, 22, 15, 21, 10, 19, 18, 18],
     }
 ];
 
