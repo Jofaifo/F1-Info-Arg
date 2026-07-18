@@ -192,6 +192,8 @@
         </nav>
     </header>
 
+    <div class="card" id="new-results-banner" style="display:none;background:linear-gradient(135deg,rgba(110,255,153,0.12),rgba(15,15,15,0.98));border-color:rgba(110,255,153,0.35);padding:1rem 1.5rem;margin-bottom:1.5rem;align-items:center;gap:0.9rem;flex-wrap:wrap"></div>
+
     <div class="admin-note card">
         <span>⚠️</span>
         <span>Este panel genera el código actualizado de <code>data.js</code>. Copiá el bloque generado y reemplazá el archivo en tu proyecto para que los cambios se reflejen en el sitio.</span>
@@ -1194,6 +1196,40 @@ async function jolpicaFetch(path) {
     return res.json();
 }
 
+// Chequeo silencioso al abrir el panel: ¿hay una carrera ya corrida en la
+// realidad que todavía no está cargada acá? Si Jolpica-F1 no responde o
+// tarda, no pasa nada — el admin sigue funcionando igual sin el aviso.
+async function checkForNewResults() {
+    try {
+        const data = await jolpicaFetch('current/last/results.json');
+        const race = data.MRData.RaceTable.Races[0];
+        if (!race) return;
+        const latestRealRound = parseInt(race.round);
+        const latestLoadedRound = Math.max(0, ...adminCalendar.filter(r => r.status === 'done').map(r => r.round));
+
+        if (latestRealRound > latestLoadedRound) {
+            const banner = document.getElementById('new-results-banner');
+            if (!banner) return;
+            banner.style.display = 'flex';
+            banner.innerHTML = `
+                <span style="font-size:1.4rem">🆕</span>
+                <div style="flex:1;min-width:200px">
+                    <strong style="color:#6eff99">Hay un resultado nuevo sin cargar</strong><br>
+                    <span style="color:var(--muted);font-size:0.88rem">${race.raceName} (ronda ${latestRealRound}) ya se corrió y todavía no está en el sitio.</span>
+                </div>
+                <button class="btn-primary" id="new-results-goto-btn">Ir a Sincronizar →</button>
+            `;
+            document.getElementById('new-results-goto-btn')?.addEventListener('click', () => {
+                switchAdminTab('sync');
+                banner.style.display = 'none';
+            });
+        }
+    } catch (err) {
+        // Silencioso a propósito: si Jolpica-F1 no responde, el admin
+        // sigue funcionando normal, solo no aparece el aviso.
+    }
+}
+
 async function openf1Fetch(path) {
     const res = await fetch(`${OPENF1_BASE}/${path}`);
     if (!res.ok) throw new Error(`OpenF1 respondió ${res.status}`);
@@ -1417,6 +1453,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initExport();
     initGithubPublish();
     initSync();
+    checkForNewResults();
 
     // ── SPRINT TAB ────────────────────────────────────────────────────────────
     function initSprint() {
