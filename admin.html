@@ -3,6 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <script>
+    // Puerta de acceso: sin sesión válida del login, volvemos al login.
+    // (Es solo una barrera de la interfaz; ver nota sobre Cloudflare Access en el informe.)
+    (function () {
+        function goLogin() { document.documentElement.style.display = 'none'; location.replace('admin-login.html'); }
+        try {
+            var raw = localStorage.getItem('f1arg_admin_auth');
+            var expiry = raw ? JSON.parse(raw).expiry : 0;
+            if (typeof expiry !== 'number' || Date.now() > expiry) goLogin();
+        } catch (e) { goLogin(); }
+    })();
+    </script>
     <title>Panel de Admin — F1 Info ARG</title>
     <link rel="icon" type="image/jpeg" href="img/logo-f1arg.jpg">
     <link rel="stylesheet" href="style.css">
@@ -539,6 +552,44 @@ const PTS_MAP = [25,18,15,12,10,8,6,4,2,1];
 
 function pts(pos) { return (pos >= 1 && pos <= 10) ? PTS_MAP[pos-1] : 0; }
 
+// Sprints cargados antes de que exista la carrera del domingo: se aplican al guardar la carrera
+const pendingSprints = new Map();
+function applyPendingSprint(roundNum, idx) {
+    const p = pendingSprints.get(roundNum);
+    if (!p) return false;
+    adminDrivers.forEach(d => {
+        d.sprintResults = d.sprintResults || [];
+        d.sprintResults[idx] = p[d.slug] ?? null;
+    });
+    pendingSprints.delete(roundNum);
+    return true;
+}
+
+// Recalcula TODO desde las posiciones guardadas (carrera + sprint): puntos, victorias,
+// podios, orden con desempate, posición de cada piloto y puntos/posición de los equipos.
+// Los equipos suman a sus pilotos titulares; si hubo suplentes, ajustalo en la pestaña Campeonato.
+function recalcStandings() {
+    const n = adminRaces.length;
+    adminDrivers.forEach(d => {
+        d.raceResults = d.raceResults || [];
+        d.sprintResults = d.sprintResults || [];
+        let points = 0, wins = 0, podiums = 0;
+        for (let i = 0; i < n; i++) {
+            points += window.getRoundPoints(d, i).total;
+            const p = d.raceResults[i];
+            if (p === 1) wins++;
+            if (p >= 1 && p <= 3) podiums++;
+        }
+        d.points = points; d.wins = wins; d.podiums = podiums;
+    });
+    adminDrivers = window.sortDrivers(adminDrivers);
+    adminDrivers.forEach((d, i) => d.position = i + 1);
+    adminConstructors.forEach(t => {
+        t.points = adminDrivers.filter(d => d.teamSlug === t.slug).reduce((s, d) => s + d.points, 0);
+    });
+    [...adminConstructors].sort((x, y) => y.points - x.points).forEach((t, i) => t.position = i + 1);
+}
+
 // ── TABS ──────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.admin-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -684,16 +735,32 @@ function saveRaceResult() {
 
     if (!hasPositions) { showToast('Ingresá al menos una posición', true); return; }
 
+    const missingDrivers = adminDrivers.filter(d => positions[d.slug] === null);
+    if (missingDrivers.length) {
+        showToast(`Faltan ${missingDrivers.length} piloto(s): ${missingDrivers.map(d => d.code).join(', ')}. Cargá las ${adminDrivers.length} posiciones (los que abandonaron van en los últimos puestos).`, true);
+        return;
+    }
+
     const usedPositions = Object.values(positions).filter(p => p !== null);
     const dupPosition = usedPositions.find((p, i) => usedPositions.indexOf(p) !== i);
     if (dupPosition) { showToast(`Hay dos pilotos en la posición ${dupPosition}`, true); return; }
 
     // Find which race index this is in the results arrays
     const raceInResults = adminRaces.findIndex(r => r.round === roundNum);
+    const prevPoleName = raceInResults >= 0 ? adminRaces[raceInResults].polePosition : '';
+    const prevFlName   = raceInResults >= 0 ? adminRaces[raceInResults].fastestLap   : '';
     if (raceInResults < 0) {
         // New race result — add to adminRaces
         const calRace = adminCalendar.find(r => r.round === roundNum);
-        adminRaces.push({
+        // Se inserta en su lugar según el número de ronda (y se alinean los arrays de cada piloto)
+        const insertAt = adminRaces.filter(r => r.round < roundNum).length;
+        adminDrivers.forEach(d => {
+            d.raceResults = d.raceResults || [];
+            d.sprintResults = d.sprintResults || [];
+            d.raceResults.splice(insertAt, 0, null);
+            d.sprintResults.splice(insertAt, 0, null);
+        });
+        adminRaces.splice(insertAt, 0, {
             round: roundNum,
             name: calRace?.name?.replace('GP de ', '') || 'R' + roundNum,
             short: 'R' + roundNum,
@@ -709,37 +776,37 @@ function saveRaceResult() {
         adminRaces[raceInResults].fastestLap   = fl?.name    || '';
     }
 
-    // Update driver raceResults
+    // Poles y vueltas rápidas: ajustar contadores si cambió el nombre respecto de lo guardado antes
+    const bump = (name, field, delta) => {
+        const drv = adminDrivers.find(d => d.name === name);
+        if (drv) drv[field] = Math.max(0, (drv[field] || 0) + delta);
+    };
+    if ((prevPoleName || '') !== (pole?.name || '')) { bump(prevPoleName, 'poles', -1); bump(pole?.name, 'poles', +1); }
+    if ((prevFlName   || '') !== (fl?.name   || '')) { bump(prevFlName, 'fastestLaps', -1); bump(fl?.name, 'fastestLaps', +1); }
+
+    // Guardar las posiciones de carrera y recalcular todo desde cero (carrera + sprint)
+    const idx = adminRaces.findIndex(r => r.round === roundNum);
     adminDrivers.forEach(d => {
         if (!d.raceResults) d.raceResults = [];
-        // Find the correct index in results
-        const idx = adminRaces.findIndex(r => r.round === roundNum);
+        if (!d.sprintResults) d.sprintResults = [];
         d.raceResults[idx] = positions[d.slug];
+        if (d.sprintResults[idx] === undefined) d.sprintResults[idx] = null;
     });
+    applyPendingSprint(roundNum, idx);
+    recalcStandings();
 
-    // Recalculate points from scratch
-    adminDrivers.forEach(d => {
-        d.points = d.raceResults.reduce((sum, pos) => sum + pts(pos || 0), 0);
-        d.wins = d.raceResults.filter(p => p === 1).length;
-        d.podiums = d.raceResults.filter(p => p >= 1 && p <= 3).length;
-    });
-
-    // Sort by points
-    adminDrivers.sort((a, b) => b.points - a.points || a.wins - b.wins);
-    adminDrivers.forEach((d, i) => d.position = i + 1);
-
-    // Update calendar status
+    // Estado del calendario: esta ronda queda 'done'; la primera que falta es 'next' y el resto 'upcoming'
     const calIdx = adminCalendar.findIndex(r => r.round === roundNum);
     if (calIdx >= 0) {
         adminCalendar[calIdx].status = 'done';
         adminCalendar[calIdx].winner = winner?.name || null;
-        // Set next race
-        const nextIdx = adminCalendar.findIndex(r => r.status === 'upcoming');
-        if (nextIdx >= 0) {
-            adminCalendar.forEach(r => { if (r.status === 'next') r.status = 'done'; });
-            adminCalendar[nextIdx].status = 'next';
-        }
+        let nextAssigned = false;
+        adminCalendar.forEach(r => {
+            if (r.status === 'done') return;
+            if (!nextAssigned) { r.status = 'next'; nextAssigned = true; } else { r.status = 'upcoming'; }
+        });
     }
+    const sprintMissing = !!adminRaces[idx].sprint && adminDrivers.some(d => d.sprintResults[idx] == null);
 
     // Show preview
     const previewCard = document.getElementById('race-preview-card');
@@ -767,7 +834,9 @@ function saveRaceResult() {
         </table>`;
     previewCard.style.display = '';
     updateStandingsPreview();
-    showToast('✅ Resultado guardado. Exportá data.js para aplicar los cambios.');
+    showToast(sprintMissing
+        ? '✅ Carrera guardada, pero esta ronda tuvo Sprint y todavía no lo cargaste (pestaña Sprint). Exportá data.js al terminar.'
+        : '✅ Resultado guardado. Exportá data.js para aplicar los cambios.');
 }
 
 // ── TAB: CHAMPIONSHIP ────────────────────────────────────────────────────────
@@ -1356,16 +1425,21 @@ async function syncStandingsPreview() {
     }
 }
 
+// Los 'type' son los que usan calendar-sessions.js, el CSS (.sched-dot) y el banner en vivo
 const SESSION_TYPE_MAP = {
-    'Practice 1': { type: 'fp1', label: 'Práctica 1' },
-    'Practice 2': { type: 'fp2', label: 'Práctica 2' },
-    'Practice 3': { type: 'fp3', label: 'Práctica 3' },
-    'Sprint Qualifying': { type: 'sprint-quali', label: 'Clasificación Sprint' },
-    'Sprint Shootout': { type: 'sprint-quali', label: 'Clasificación Sprint' },
+    'Practice 1': { type: 'fp', label: 'Práctica 1' },
+    'Practice 2': { type: 'fp', label: 'Práctica 2' },
+    'Practice 3': { type: 'fp', label: 'Práctica 3' },
+    'Sprint Qualifying': { type: 'qual', label: 'Clasificación Sprint' },
+    'Sprint Shootout': { type: 'qual', label: 'Clasificación Sprint' },
     'Sprint': { type: 'sprint', label: 'Sprint' },
-    'Qualifying': { type: 'quali', label: 'Clasificación' },
+    'Qualifying': { type: 'qual', label: 'Clasificación' },
     'Race': { type: 'race', label: 'Carrera' }
 };
+const ART_WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const ART_MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+// Hora argentina (UTC-3, sin horario de verano) sin depender de la zona horaria de quien abre el panel
+function toArt(iso) { return new Date(new Date(iso).getTime() - 3 * 3600 * 1000); }
 
 async function syncCalendarSessions() {
     const out = document.getElementById('sync-sessions-output');
@@ -1383,7 +1457,7 @@ async function syncCalendarSessions() {
         Object.values(byMeeting).forEach(sessList => {
             const raceSess = sessList.find(s => s.session_type === 'Race');
             if (!raceSess) return;
-            const raceDate = raceSess.date_start.slice(0, 10);
+            const raceDate = toArt(raceSess.date_start).toISOString().slice(0, 10); // el calendario usa la fecha argentina
             const round = adminCalendar.find(r => r.date === raceDate);
             if (!round) { notMatched.push(sessList[0].location || sessList[0].country_name || raceDate); return; }
 
@@ -1392,13 +1466,13 @@ async function syncCalendarSessions() {
                 .filter(s => SESSION_TYPE_MAP[s.session_name])
                 .sort((a, b) => new Date(a.date_start) - new Date(b.date_start))
                 .map(s => {
-                    const artDate = new Date(new Date(s.date_start).getTime() - 3 * 3600 * 1000); // UTC-3, ARG no usa horario de verano
-                    const dayStr = artDate.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '');
+                    const artDate = toArt(s.date_start);
+                    const dayStr = `${ART_WEEKDAYS[artDate.getUTCDay()]} ${artDate.getUTCDate()} ${ART_MONTHS[artDate.getUTCMonth()]}`;
                     const meta = SESSION_TYPE_MAP[s.session_name];
                     return {
                         type: meta.type,
                         label: meta.label,
-                        day: dayStr.charAt(0).toUpperCase() + dayStr.slice(1),
+                        day: dayStr,
                         time: artDate.toISOString().slice(11, 16) + ' hs'
                     };
                 });
@@ -1463,7 +1537,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── SPRINT TAB ────────────────────────────────────────────────────────────
     function initSprint() {
         const SPRINT_PTS = [8,7,6,5,4,3,2,1];
-        const savedSprintRounds = new Set();
         const roundSel   = document.getElementById('sprint-round');
         const winnerSel  = document.getElementById('sprint-winner');
         if (!roundSel || !winnerSel) return;
@@ -1518,44 +1591,39 @@ document.addEventListener('DOMContentLoaded', () => {
             const roundNum = parseInt(roundSel.value);
             if (!roundNum) { showToast('Seleccioná una ronda Sprint', true); return; }
 
-            if (savedSprintRounds.has(roundNum)) {
-                showToast('El Sprint de esta ronda ya fue guardado — recargá el panel para volver a editarlo', true);
-                return;
-            }
-
             const winnerSlug = winnerSel.value;
             const winner = adminDrivers.find(d => d.slug === winnerSlug);
 
-            // Collect positions first, to validate before tocar puntos
+            // Se necesitan las posiciones de todos los pilotos (igual que en la carrera)
             const sprintPositions = {};
-            let hasPositions = false;
             adminDrivers.forEach(d => {
                 const val = parseInt(document.getElementById('sprint-pos-' + d.slug)?.value);
-                if (!isNaN(val) && val >= 1 && val <= 8) {
-                    hasPositions = true;
-                    sprintPositions[d.slug] = val;
-                }
+                if (!isNaN(val) && val >= 1 && val <= 22) sprintPositions[d.slug] = val;
             });
-
-            if (!hasPositions) { showToast('Ingresá al menos una posición', true); return; }
+            const missingSprint = adminDrivers.filter(d => !sprintPositions[d.slug]);
+            if (missingSprint.length) {
+                showToast(`Faltan ${missingSprint.length} piloto(s) en el Sprint: ${missingSprint.map(d => d.code).join(', ')}. Cargá las ${adminDrivers.length} posiciones.`, true);
+                return;
+            }
 
             const usedSprintPositions = Object.values(sprintPositions);
             const dupSprintPos = usedSprintPositions.find((p, i) => usedSprintPositions.indexOf(p) !== i);
             if (dupSprintPos) { showToast(`Hay dos pilotos en la posición ${dupSprintPos} del Sprint`, true); return; }
 
-            // Recién acá, con todo validado, sumamos los puntos
-            adminDrivers.forEach(d => {
-                const val = sprintPositions[d.slug];
-                if (val) {
-                    d.sprintPts = (d.sprintPts || 0) + SPRINT_PTS[val-1];
-                    d.points = (d.points || 0) + SPRINT_PTS[val-1];
-                }
-            });
-            savedSprintRounds.add(roundNum);
-
-            // Re-sort standings
-            adminDrivers.sort((a,b) => b.points - a.points);
-            adminDrivers.forEach((d,i) => d.position = i+1);
+            // Guardar las posiciones; los puntos se recalculan solos (se puede volver a guardar sin duplicar nada)
+            const raceIdx = adminRaces.findIndex(r => r.round === roundNum);
+            let appliedNow = false;
+            if (raceIdx >= 0) {
+                adminDrivers.forEach(d => {
+                    d.sprintResults = d.sprintResults || [];
+                    d.sprintResults[raceIdx] = sprintPositions[d.slug];
+                });
+                pendingSprints.delete(roundNum);
+                recalcStandings();
+                appliedNow = true;
+            } else {
+                pendingSprints.set(roundNum, sprintPositions);
+            }
 
             // Preview top 8
             const previewCard = document.getElementById('sprint-preview-card');
@@ -1594,7 +1662,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             updateStandingsPreview();
-            showToast('✅ Resultado Sprint guardado. Exportá data.js para aplicar.');
+            showToast(appliedNow
+                ? '✅ Sprint guardado y puntos recalculados. Exportá data.js para aplicar.'
+                : '✅ Sprint guardado. Se suma a la clasificación cuando guardes la carrera de esa ronda (pestaña Resultado de carrera).');
         });
     }
     initSprint();

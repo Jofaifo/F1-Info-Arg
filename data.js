@@ -1,10 +1,10 @@
-// ─── CARRERAS DISPUTADAS (22 carreras — Bahrein y Arabia Saudita canceladas) ──
+// ─── CARRERAS DISPUTADAS (una entrada por ronda ya corrida; el calendario completo está más abajo) ──
 window.races = [
     { round: 1, name: 'Australia',  short: 'AUS', flag: '🇦🇺', winner: 'George Russell',  polePosition: 'George Russell',  fastestLap: 'Kimi Antonelli' },
-    { round: 2, name: 'China',      short: 'CHN', flag: '🇨🇳', winner: 'Kimi Antonelli',  polePosition: 'George Russell',  fastestLap: 'George Russell',  sprint: true },
+    { round: 2, name: 'China',      short: 'CHN', flag: '🇨🇳', winner: 'Kimi Antonelli',  polePosition: 'Kimi Antonelli',  fastestLap: 'George Russell',  sprint: true },
     { round: 3, name: 'Japón',      short: 'JPN', flag: '🇯🇵', winner: 'Kimi Antonelli',  polePosition: 'Kimi Antonelli',  fastestLap: 'Charles Leclerc' },
     { round: 4, name: 'Miami',      short: 'MIA', flag: '🇺🇸', winner: 'Kimi Antonelli',  polePosition: 'Kimi Antonelli',  fastestLap: 'Lando Norris',    sprint: true },
-    { round: 5, name: 'Canadá',     short: 'CAN', flag: '🇨🇦', winner: 'Kimi Antonelli',  polePosition: 'Kimi Antonelli',  fastestLap: 'Oscar Piastri',   sprint: true },
+    { round: 5, name: 'Canadá',     short: 'CAN', flag: '🇨🇦', winner: 'Kimi Antonelli',  polePosition: 'George Russell',  fastestLap: 'Oscar Piastri',   sprint: true },
     { round: 6, name: 'Mónaco',     short: 'MON', flag: '🇲🇨', winner: 'Kimi Antonelli',  polePosition: 'Kimi Antonelli',  fastestLap: 'Kimi Antonelli' },
     { round: 7, name: 'Barcelona-Catalunya', short: 'ESP', flag: '🇪🇸', winner: 'Lewis Hamilton',  polePosition: 'George Russell',  fastestLap: 'Lewis Hamilton' },
     { round: 8, name: 'Austria',    short: 'AUT', flag: '🇦🇹', winner: 'George Russell',  polePosition: 'George Russell',  fastestLap: 'Kimi Antonelli' },
@@ -40,6 +40,7 @@ window.drivers = [
         wins: 5, podiums: 7, poles: 5, fastestLaps: 4,
         bio: 'Joven fenómeno de Mercedes que lidera el campeonato con velocidad y madurez sorprendente para sus 19 años.',
         raceResults: [2, 1, 1, 1, 1, 1, 16, 3, 15],
+        sprintResults: [null, 5, null, 6, 3, null, null, null, 1],
     },
     {
         slug: 'george-russell',
@@ -50,9 +51,10 @@ window.drivers = [
         team: 'Mercedes', teamSlug: 'mercedes',
         points: 154, code: 'RUS', colorClass: 'team-mercedes',
         nationality: 'Británico', age: 27,
-        wins: 2, podiums: 7, poles: 6, fastestLaps: 2,
+        wins: 2, podiums: 5, poles: 6, fastestLaps: 2,
         bio: 'Russell mantiene el ritmo de Mercedes con actuaciones consistentes y rápidas en clasificación.',
-        raceResults: [1, 2, 4, 4, 2, 12, 2, 1, 2],
+        raceResults: [1, 2, 4, 4, 19, 12, 2, 1, 2],
+        sprintResults: [null, 1, null, 4, 1, null, null, null, 4],
     },
     {
         slug: 'charles-leclerc',
@@ -65,7 +67,8 @@ window.drivers = [
         nationality: 'Monegasco', age: 27,
         wins: 1, podiums: 3, poles: 2, fastestLaps: 2,
         bio: 'Leclerc sigue siendo la punta de lanza de Ferrari con velocidad pura y determinación.',
-        raceResults: [3, 4, 2, 8, 4, null, 15, 8, 1],
+        raceResults: [3, 4, 3, 8, 4, 17, 15, 8, 1],
+        sprintResults: [null, 2, null, 3, 5, null, null, null, 5],
     },
     {
         slug: 'lewis-hamilton',
@@ -76,9 +79,10 @@ window.drivers = [
         team: 'Ferrari', teamSlug: 'ferrari',
         points: 147, code: 'HAM', colorClass: 'team-ferrari',
         nationality: 'Británico', age: 40,
-        wins: 1, podiums: 6, poles: 0, fastestLaps: 1,
+        wins: 1, podiums: 5, poles: 0, fastestLaps: 1,
         bio: 'Hamilton aporta experiencia y eficacia a Ferrari en una lucha cerrada por el título.',
-        raceResults: [4, 3, 3, 6, 3, 2, 1, 5, 3],
+        raceResults: [4, 3, 6, 6, 2, 2, 1, 5, 3],
+        sprintResults: [null, 3, null, 7, 6, null, null, null, 2],
     },
     {
         slug: 'lando-norris',
@@ -91,7 +95,8 @@ window.drivers = [
         nationality: 'Británico', age: 25,
         wins: 0, podiums: 2, poles: 1, fastestLaps: 2,
         bio: 'Norris combina agresividad y buen manejo para mantener a McLaren en la pelea.',
-        raceResults: [5, 6, 6, 2, 6, null, 3, 7, 4],
+        raceResults: [5, 19, 5, 2, 18, 19, 3, 7, 4],
+        sprintResults: [null, 4, null, 1, 2, null, null, null, 3],
     },
     {
         slug: 'oscar-piastri',
@@ -100,11 +105,12 @@ window.drivers = [
         flag: '🇦🇺', flagImg: 'img/flags/au.png',
         photo: 'img/drivers/oscar-piastri.jpg',
         team: 'McLaren', teamSlug: 'mclaren',
-        points: 82, code: 'PIA', colorClass: 'team-mclaren',
+        points: 84, code: 'PIA', colorClass: 'team-mclaren',
         nationality: 'Australiano', age: 24,
-        wins: 0, podiums: 1, poles: 0, fastestLaps: 1,
+        wins: 0, podiums: 2, poles: 0, fastestLaps: 1,
         bio: 'Piastri muestra consistencia y velocidad, consolidando el buen momento de McLaren.',
-        raceResults: [6, 5, 5, 3, 5, 4, 5, 4, 11],
+        raceResults: [21, 20, 2, 3, 11, 4, 5, 4, 11],
+        sprintResults: [null, 6, null, 2, 4, null, null, null, 7],
     },
     {
         slug: 'max-verstappen',
@@ -115,22 +121,24 @@ window.drivers = [
         team: 'Red Bull Racing', teamSlug: 'red-bull-racing',
         points: 76, code: 'VER', colorClass: 'team-redbull',
         nationality: 'Holandés', age: 27,
-        wins: 0, podiums: 1, poles: 0, fastestLaps: 2,
+        wins: 0, podiums: 2, poles: 0, fastestLaps: 2,
         bio: 'El tetracampeón sigue sumando puntos pero Red Bull lucha con el nuevo reglamento técnico.',
-        raceResults: [7, 7, 7, 5, 7, null, 4, 2, 20],
+        raceResults: [6, 16, 8, 5, 3, 22, 4, 2, 20],
+        sprintResults: [null, 9, null, 5, 7, null, null, null, 6],
     },
     {
         slug: 'pierre-gasly',
-        position: 9,
+        position: 10,
         name: 'Pierre Gasly',
         flag: '🇫🇷', flagImg: 'img/flags/fr.png',
         photo: 'img/drivers/pierre-gasly.jpg',
         team: 'Alpine', teamSlug: 'alpine',
-        points: 42, code: 'GAS', colorClass: 'team-alpine',
+        points: 33, code: 'GAS', colorClass: 'team-alpine',
         nationality: 'Francés', age: 29,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Gasly aporta velocidad y solidez a Alpine con puntos clave en cada carrera.',
-        raceResults: [8, 8, 9, 21, 14, 7, 7, 13, 10],
+        raceResults: [10, 6, 7, 21, 8, 7, 7, 13, 10],
+        sprintResults: [null, 11, null, 8, 20, null, null, null, 11],
     },
     {
         slug: 'oliver-bearman',
@@ -143,20 +151,22 @@ window.drivers = [
         nationality: 'Británico', age: 20,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Joven talento en Haas que ya sumó puntos importantes y demostró gran adaptabilidad.',
-        raceResults: [9, 9, 8, 11, 9, null, 17, 14, 12],
+        raceResults: [7, 5, 22, 11, 10, 20, 17, 14, 12],
+        sprintResults: [null, 8, null, 12, 18, null, null, null, 15],
     },
     {
         slug: 'liam-lawson',
-        position: 10,
+        position: 9,
         name: 'Liam Lawson',
         flag: '🇳🇿', flagImg: 'img/flags/nz.png',
         photo: 'img/drivers/liam-lawson.jpg',
         team: 'Racing Bulls', teamSlug: 'racing-bulls',
-        points: 39, code: 'LAW', colorClass: 'team-racing-bulls',
+        points: 41, code: 'LAW', colorClass: 'team-racing-bulls',
         nationality: 'Neozelandés', age: 23,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Lawson aporta ritmo y consistencia al equipo Racing Bulls en su primera temporada completa.',
-        raceResults: [10, 10, 10, 20, 10, 5, 8, 9, 6],
+        raceResults: [13, 7, 9, 20, 7, 5, 8, 9, 6],
+        sprintResults: [null, 7, null, 14, 11, null, null, null, 8],
     },
     {
         slug: 'franco-colapinto',
@@ -169,7 +179,8 @@ window.drivers = [
         nationality: 'Argentino', age: 21,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'El piloto de San Andrés de Giles sorprende con madurez y velocidad en su primera temporada completa en F1.',
-        raceResults: [14, 10, 16, 7, null, 14, 10, 15, 9],
+        raceResults: [14, 10, 16, 7, 6, 14, 10, 15, 9],
+        sprintResults: [null, 14, null, 10, 9, null, null, null, 12],
     },
     {
         slug: 'isack-hadjar',
@@ -178,11 +189,12 @@ window.drivers = [
         flag: '🇫🇷', flagImg: 'img/flags/fr.png',
         photo: 'img/drivers/isack-hadjar.jpg',
         team: 'Red Bull Racing', teamSlug: 'red-bull-racing',
-        points: 52, code: 'HAD', colorClass: 'team-redbull',
+        points: 55, code: 'HAD', colorClass: 'team-redbull',
         nationality: 'Francés', age: 19,
         wins: 0, podiums: 1, poles: 0, fastestLaps: 0,
         bio: 'Promesa de Red Bull que ya suma puntos importantes y acelera carrera a carrera.',
-        raceResults: [11, 11, 11, 22, 11, 3, 6, 6, 5],
+        raceResults: [20, 8, 12, 22, 5, 3, 6, 6, 5],
+        sprintResults: [null, 15, null, 9, 21, null, null, null, 9],
     },
     {
         slug: 'carlos-sainz',
@@ -195,7 +207,8 @@ window.drivers = [
         nationality: 'Español', age: 30,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Sainz suma puntos importantes y da experiencia clave al proyecto de Williams.',
-        raceResults: [12, 12, 12, 9, 13, null, 12, 20, 17],
+        raceResults: [15, 9, 15, 9, 9, 16, 12, 20, 17],
+        sprintResults: [null, 12, null, 13, 10, null, null, null, 17],
     },
     {
         slug: 'arvid-lindblad',
@@ -204,11 +217,12 @@ window.drivers = [
         flag: '🇸🇪', flagImg: 'img/flags/se.png',
         photo: 'img/drivers/arvid-lindblad.jpg',
         team: 'Racing Bulls', teamSlug: 'racing-bulls',
-        points: 20, code: 'LIN', colorClass: 'team-racing-bulls',
+        points: 22, code: 'LIN', colorClass: 'team-racing-bulls',
         nationality: 'Sueco', age: 18,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Lindblad aporta consistencia a Racing Bulls con un buen ritmo de carrera en su debut en F1.',
-        raceResults: [13, 13, 13, 14, 12, 6, 9, 10, 7],
+        raceResults: [8, 12, 14, 14, 22, 6, 9, 10, 7],
+        sprintResults: [null, 22, null, 21, 8, null, null, null, 10],
     },
     {
         slug: 'gabriel-bortoleto',
@@ -221,7 +235,8 @@ window.drivers = [
         nationality: 'Brasileño', age: 20,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Rookie de Audi que ya logró sus primeros puntos en la temporada inaugural del equipo alemán.',
-        raceResults: [16, 14, 14, 12, 15, 11, 11, 11, 8],
+        raceResults: [9, 21, 13, 12, 13, 11, 11, 11, 8],
+        sprintResults: [null, 13, null, 22, 12, null, null, null, 14],
     },
     {
         slug: 'esteban-ocon',
@@ -234,7 +249,8 @@ window.drivers = [
         nationality: 'Francés', age: 28,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Ocon aporta experiencia y puntos valiosos para Haas en esta nueva etapa de su carrera.',
-        raceResults: [15, 15, 15, 13, 16, 9, 13, 16, 13],
+        raceResults: [11, 14, 10, 13, 14, 9, 13, 16, 13],
+        sprintResults: [null, 10, null, 11, 13, null, null, null, 16],
     },
     {
         slug: 'alexander-albon',
@@ -247,7 +263,8 @@ window.drivers = [
         nationality: 'Tailandés', age: 29,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Albon ayuda a Williams con actuaciones sólidas y un estilo de manejo agresivo.',
-        raceResults: [17, 16, 17, 10, 8, 8, 18, 17, 21],
+        raceResults: [12, 22, 20, 10, 20, 8, 18, 17, 21],
+        sprintResults: [null, 16, null, 18, 19, null, null, null, 18],
     },
     {
         slug: 'nico-hulkenberg',
@@ -260,11 +277,12 @@ window.drivers = [
         nationality: 'Alemán', age: 37,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Hülkenberg aporta experiencia y estabilidad al ambicioso proyecto de Audi en Fórmula 1.',
-        raceResults: [18, 17, 18, 19, 17, 13, 20, 12, 22],
+        raceResults: [22, 11, 11, 19, 12, 13, 20, 12, 22],
+        sprintResults: [null, 20, null, 20, 15, null, null, null, 13],
     },
     {
         slug: 'valtteri-bottas',
-        position: 21,
+        position: 20,
         name: 'Valtteri Bottas',
         flag: '🇫🇮', flagImg: 'img/flags/fi.png',
         photo: 'img/drivers/valtteri-bottas.jpg',
@@ -273,11 +291,12 @@ window.drivers = [
         nationality: 'Finlandés', age: 35,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Bottas aporta veteranía y técnica de set-up a Cadillac en el inicio de su proyecto en F1.',
-        raceResults: [19, 18, 19, 18, 18, null, 21, 22, 16],
+        raceResults: [19, 13, 19, 18, 16, 21, 21, 22, 16],
+        sprintResults: [null, 21, null, 19, 17, null, null, null, 19],
     },
     {
         slug: 'sergio-perez',
-        position: 20,
+        position: 21,
         name: 'Sergio Pérez',
         flag: '🇲🇽', flagImg: 'img/flags/mx.png',
         photo: 'img/drivers/sergio-perez.jpg',
@@ -286,7 +305,8 @@ window.drivers = [
         nationality: 'Mexicano', age: 35,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Pérez aporta experiencia y liderazgo a Cadillac en su primera temporada en la parrilla.',
-        raceResults: [20, 19, 20, 16, 19, 15, 14, 21, 14],
+        raceResults: [16, 15, 17, 16, 17, 15, 14, 21, 14],
+        sprintResults: [null, 19, null, 16, 14, null, null, null, 22],
     },
     {
         slug: 'lance-stroll',
@@ -299,7 +319,8 @@ window.drivers = [
         nationality: 'Canadiense', age: 26,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Stroll sigue trabajando para encontrar el ritmo en el Aston Martin de nueva generación.',
-        raceResults: [21, 20, 21, 17, 20, null, 22, 19, 19],
+        raceResults: [17, 18, 21, 17, 15, 18, 22, 19, 19],
+        sprintResults: [null, 18, null, 17, 16, null, null, null, 21],
     },
     {
         slug: 'fernando-alonso',
@@ -312,7 +333,8 @@ window.drivers = [
         nationality: 'Español', age: 44,
         wins: 0, podiums: 0, poles: 0, fastestLaps: 0,
         bio: 'Alonso aporta experiencia y sabiduría incomparables a Aston Martin en esta temporada de reinicio.',
-        raceResults: [22, 21, 22, 15, 21, 10, 19, 18, 18],
+        raceResults: [18, 17, 18, 15, 21, 10, 19, 18, 18],
+        sprintResults: [null, 17, null, 15, 22, null, null, null, 20],
     }
 ];
 
@@ -346,7 +368,7 @@ window.constructors = [
         slug: 'mclaren', position: 3, name: 'McLaren',
         flag: '🇬🇧', flagImg: 'img/flags/gb.png',
         originFlag: 'img/flags/gb.png', baseFlag: 'img/flags/gb.png',
-        points: 179, code: 'MCL', colorClass: 'team-mclaren', color: '#FF8000',
+        points: 181, code: 'MCL', colorClass: 'team-mclaren', color: '#FF8000',
         image: 'img/mclaren.png',
         base: 'Woking, Reino Unido', origin: 'Reino Unido',
         teamPrincipal: 'Andrea Stella', engine: 'Mercedes', championships: 8,
@@ -358,7 +380,7 @@ window.constructors = [
         slug: 'red-bull-racing', position: 4, name: 'Red Bull Racing',
         flag: '🇦🇹', flagImg: 'img/flags/at.png',
         originFlag: 'img/flags/at.png', baseFlag: 'img/flags/gb.png',
-        points: 128, code: 'RBR', colorClass: 'team-redbull', color: '#1B3FAB',
+        points: 131, code: 'RBR', colorClass: 'team-redbull', color: '#1B3FAB',
         image: 'img/red-bull.png',
         base: 'Milton Keynes, Reino Unido', origin: 'Austria',
         teamPrincipal: 'Christian Horner', engine: 'Red Bull Powertrains', championships: 7,
@@ -367,10 +389,10 @@ window.constructors = [
         constructorHistory: [8, 16, 24, 40, 49, 53, 45],
     },
     {
-        slug: 'alpine', position: 5, name: 'Alpine',
+        slug: 'alpine', position: 6, name: 'Alpine',
         flag: '🇫🇷', flagImg: 'img/flags/fr.png',
         originFlag: 'img/flags/fr.png', baseFlag: 'img/flags/gb.png',
-        points: 60, code: 'ALP', colorClass: 'team-alpine', color: '#005AFF',
+        points: 51, code: 'ALP', colorClass: 'team-alpine', color: '#005AFF',
         image: 'img/alpine.png',
         base: 'Enstone, Reino Unido', origin: 'Francia',
         teamPrincipal: 'Otmar Szafnauer', engine: 'Mercedes', championships: 1,
@@ -379,10 +401,10 @@ window.constructors = [
         constructorHistory: [3, 8, 12, 22, 28, 31, 29],
     },
     {
-        slug: 'racing-bulls', position: 6, name: 'Racing Bulls',
+        slug: 'racing-bulls', position: 5, name: 'Racing Bulls',
         flag: '🇮🇹', flagImg: 'img/flags/it.png',
         originFlag: 'img/flags/at.png', baseFlag: 'img/flags/it.png',
-        points: 59, code: 'RBL', colorClass: 'team-racing-bulls', color: '#3671C6',
+        points: 63, code: 'RBL', colorClass: 'team-racing-bulls', color: '#3671C6',
         image: 'img/visa-rb.png',
         base: 'Faenza, Italia', origin: 'Austria / Italia',
         teamPrincipal: 'Laurent Mekies', engine: 'Red Bull Powertrains', championships: 0,
@@ -846,26 +868,37 @@ window.getTeamColor = s => window.teamColors[s] || '#888';
 // Pilotos ordenados como el campeonato: puntos y, si empatan, desempate por
 // "cuenta atrás" (más 1º puestos, luego más 2º, etc.) y por último alfabético.
 // Es el único lugar que define el orden; no confiar en el orden del array window.drivers.
-window.getSortedDrivers = function () {
+window.sortDrivers = function (list) {
     const finishes = d => {
         const c = new Array(22).fill(0);
         (d.raceResults || []).forEach(p => { if (p >= 1 && p <= 22) c[p - 1]++; });
         return c;
     };
-    const cache = new Map(window.drivers.map(d => [d, finishes(d)]));
-    return [...window.drivers].sort((a, b) => {
+    const cache = new Map(list.map(d => [d, finishes(d)]));
+    return [...list].sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
         const ca = cache.get(a), cb = cache.get(b);
         for (let i = 0; i < 22; i++) if (cb[i] !== ca[i]) return cb[i] - ca[i];
         return a.name.localeCompare(b.name, 'es');
     });
 };
+window.getSortedDrivers = function () { return window.sortDrivers(window.drivers); };
 
+// Puntos de cada fin de semana: carrera + sprint (si hubo). Es el único lugar donde se
+// traducen posiciones a puntos; main.js y el admin usan estas funciones.
+window.RACE_POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+window.SPRINT_POINTS = [8, 7, 6, 5, 4, 3, 2, 1];
+window.getRoundPoints = function(driver, i) {
+    const rp = (driver.raceResults || [])[i];
+    const sp = (driver.sprintResults || [])[i];
+    const race = rp >= 1 && rp <= 10 ? window.RACE_POINTS[rp - 1] : 0;
+    const sprint = sp >= 1 && sp <= 8 ? window.SPRINT_POINTS[sp - 1] : 0;
+    return { race, sprint, total: race + sprint };
+};
 window.getCumulativePoints = function(driver) {
-    const pts = [25,18,15,12,10,8,6,4,2,1];
     let cum = 0;
-    return (driver.raceResults || []).map(pos => {
-        if (pos !== null && pos >= 1 && pos <= 10) cum += pts[pos-1];
+    return (driver.raceResults || []).map((_, i) => {
+        cum += window.getRoundPoints(driver, i).total;
         return cum;
     });
 };

@@ -272,12 +272,13 @@ function renderDriverDetail(slug) {
         const posLabel = pos == null
             ? '<span class="dnf">—</span>'
             : pos <= 3 ? `${medals[pos]} ${pos}º` : `${pos}º`;
-        const pts = pos && pos >= 1 && pos <= 10 ? [25,18,15,12,10,8,6,4,2,1][pos-1] : 0;
+        const rp = window.getRoundPoints(driver, i);
+        const pts = rp.total;
         const rowClass = pos === 1 ? 'row-win' : (pos && pos <= 3 ? 'row-podium' : '');
         return `<tr class="${rowClass}">
             <td>${race.flag} ${race.name}${race.sprint ? ' <em class="sprint-tag">S</em>' : ''}</td>
             <td class="pos-cell">${posLabel}</td>
-            <td class="pts-mini">${pts > 0 ? '+' + pts : '—'}</td>
+            <td class="pts-mini">${pts > 0 ? '+' + pts : '—'}${rp.sprint > 0 ? ` <small class="muted-text" title="Incluye ${rp.sprint} pts del sprint">(${rp.sprint} S)</small>` : ''}</td>
         </tr>`;
     }).join('');
 
@@ -882,9 +883,8 @@ function runCompare() {
     const raceRows = racesDone.map((race, i) => {
         const posA = dA.raceResults ? dA.raceResults[i] : null;
         const posB = dB.raceResults ? dB.raceResults[i] : null;
-        const pts = [25,18,15,12,10,8,6,4,2,1];
-        const ptsA = posA && posA >= 1 && posA <= 10 ? pts[posA-1] : 0;
-        const ptsB = posB && posB >= 1 && posB <= 10 ? pts[posB-1] : 0;
+        const ptsA = window.getRoundPoints(dA, i).total;
+        const ptsB = window.getRoundPoints(dB, i).total;
         const clsA = posA !== null && (posB === null || posA < posB) ? 'cmp-race-winner' : '';
         const clsB = posB !== null && (posA === null || posB < posA) ? 'cmp-race-winner' : '';
         return `<tr>
@@ -1668,7 +1668,6 @@ function renderStats() {
         <!-- MATRIZ DE RESULTADOS -->
         <section class="stats-section">
             <h2 class="stats-section-title">📊 Tabla de posiciones carrera a carrera (top 10)</h2>
-            <p class="muted-text" style="margin:0 0 0.9rem">Cuenta solo los puntos de carrera; los puntos de sprint no están incluidos.</p>
             <div class="card" style="overflow-x:auto">
                 ${buildResultsMatrix()}
             </div>
@@ -1704,7 +1703,6 @@ function renderStats() {
         <!-- CONSTRUCTORES CARRERA A CARRERA -->
         <section class="stats-section">
             <h2 class="stats-section-title">📈 Evolución constructores carrera a carrera</h2>
-            <p class="muted-text" style="margin:0 0 0.9rem">Cuenta solo los puntos de carrera; los puntos de sprint no están incluidos.</p>
             <div class="card" style="padding:1.5rem">
                 ${buildConstructorsChart(constructorRaceHistory)}
             </div>
@@ -1725,7 +1723,7 @@ function computeSeasonRecords() {
     let bestRacePts = 0, bestRaceDriver = null, bestRaceName = '';
     drivers.forEach(d => {
         (d.raceResults || []).forEach((pos, i) => {
-            const p = pos >= 1 && pos <= 10 ? PTS[pos-1] : 0;
+            const p = window.getRoundPoints(d, i).total;
             if (p > bestRacePts) {
                 bestRacePts = p;
                 bestRaceDriver = d;
@@ -1816,7 +1814,7 @@ function computeSeasonRecords() {
             color: bestAvgDriver ? window.getTeamColor(bestAvgDriver.teamSlug) : '#888'
         },
         {
-            label: 'Mayor puntuación en carrera',
+            label: 'Más puntos en un fin de semana',
             value: `+${bestRacePts} pts`,
             holder: bestRaceDriver?.name || '—',
             sub: bestRaceName,
@@ -1867,9 +1865,10 @@ function buildResultsMatrix() {
         const cells = races.map((_, i) => {
             const pos = d.raceResults?.[i];
             if (pos === null || pos === undefined) return '<td class="matrix-cell matrix-null">—</td>';
-            const pts = pos >= 1 && pos <= 10 ? PTS[pos-1] : 0;
+            const rp = window.getRoundPoints(d, i);
+            const pts = rp.total;
             const cls = pos === 1 ? 'matrix-p1' : pos <= 3 ? 'matrix-p3' : pos <= 10 ? 'matrix-pts' : 'matrix-nopt';
-            return `<td class="matrix-cell ${cls}" title="+${pts} pts">${pos}</td>`;
+            return `<td class="matrix-cell ${cls}" title="+${pts} pts${rp.sprint ? ' (' + rp.sprint + ' del sprint)' : ''}">${pos}</td>`;
         }).join('');
         return `<tr>
             <td class="matrix-driver-cell">
@@ -1955,10 +1954,7 @@ function buildConstructorRaceHistory() {
         history[team.slug] = [];
         for (let i = 0; i < n; i++) {
             teamDrivers.forEach(d => {
-                const pos = d.raceResults?.[i];
-                if (pos !== null && pos !== undefined && pos >= 1 && pos <= 10) {
-                    cum += PTS[pos-1];
-                }
+                cum += window.getRoundPoints(d, i).total;
             });
             history[team.slug].push(cum);
         }
@@ -2113,8 +2109,7 @@ function renderTimeline() {
     el.innerHTML = `
         <!-- Chart -->
         <div class="card" style="padding:1.5rem">
-            <h2 style="margin:0 0 0.4rem;font-size:1rem">Evolución del campeonato — Top 8</h2>
-            <p class="muted-text" style="margin:0 0 1rem">Cuenta solo los puntos de carrera; los puntos de sprint no están incluidos.</p>
+            <h2 style="margin:0 0 1rem;font-size:1rem">Evolución del campeonato — Top 8</h2>
             <svg viewBox="0 0 ${W} ${H}" style="width:100%;overflow:visible">
                 ${yLabels}${xLabels}${lines}
             </svg>
