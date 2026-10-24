@@ -102,7 +102,7 @@ function renderDriverStandings() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    const sorted = [...window.drivers].sort((a, b) => b.points - a.points || (b.wins || 0) - (a.wins || 0));
+    const sorted = window.getSortedDrivers();
 
     sorted.forEach((driver, idx) => {
         const tr = document.createElement('tr');
@@ -235,7 +235,7 @@ function renderDriverDetail(slug) {
     }
 
     const color = (window.teamColors && window.teamColors[driver.teamSlug]) || '#888';
-    const sortedDrivers = [...window.drivers].sort((a, b) => b.points - a.points);
+    const sortedDrivers = window.getSortedDrivers();
     const realPosition = sortedDrivers.findIndex(d => d.slug === driver.slug) + 1;
     const leader = sortedDrivers[0];
     const gap = realPosition === 1 ? 'Líder' : `-${leader.points - driver.points} pts del líder`;
@@ -504,7 +504,7 @@ function renderChampionshipLeaders() {
     var dEl = document.getElementById('driver-leader');
     var tEl = document.getElementById('team-leader');
     if (dEl && window.drivers && window.drivers.length) {
-        var d = [...window.drivers].sort((a, b) => b.points - a.points)[0];
+        var d = window.getSortedDrivers()[0];
         var dColor = (window.teamColors && window.teamColors[d.teamSlug]) || '#888';
         var dFlag = d.flagImg ? '<img src="' + d.flagImg + '" class="detail-flag-img" alt="">' : (d.flag || '');
         dEl.innerHTML =
@@ -582,7 +582,7 @@ function renderCalendar(filter) {
                 : '<span class="race-status">⏳</span>';
 
         const winnerHtml = race.status === 'done'
-            ? `<span class="race-winner">🏆 ${race.winner || '—'}</span>`
+            ? (race.winner ? `<span class="race-winner">🏆 ${race.winner}</span>` : '<span class="race-winner">⏳ Resultado pendiente</span>')
             : '';
 
         const scheduleHtml = (sess && sess.sessions && race.status !== 'done')
@@ -834,7 +834,7 @@ function runCompare() {
     const result = document.getElementById('compare-result');
     if (!dA || !dB || !result) return;
 
-    const sortedDriversCmp = [...window.drivers].sort((a, b) => b.points - a.points);
+    const sortedDriversCmp = window.getSortedDrivers();
     const posA = sortedDriversCmp.findIndex(d => d.slug === dA.slug) + 1;
     const posB = sortedDriversCmp.findIndex(d => d.slug === dB.slug) + 1;
 
@@ -1406,7 +1406,7 @@ function renderRookies() {
         .map(s => window.drivers.find(d => d.slug === s))
         .filter(Boolean);
 
-    const sortedDriversRk = [...window.drivers].sort((a, b) => b.points - a.points);
+    const sortedDriversRk = window.getSortedDrivers();
 
     grid.innerHTML = rookies.map(d => {
         const color = window.getTeamColor(d.teamSlug);
@@ -1660,6 +1660,7 @@ function renderStats() {
         <!-- MATRIZ DE RESULTADOS -->
         <section class="stats-section">
             <h2 class="stats-section-title">📊 Tabla de posiciones carrera a carrera (top 10)</h2>
+            <p class="muted-text" style="margin:0 0 0.9rem">Cuenta solo los puntos de carrera; los puntos de sprint no están incluidos.</p>
             <div class="card" style="overflow-x:auto">
                 ${buildResultsMatrix()}
             </div>
@@ -1695,6 +1696,7 @@ function renderStats() {
         <!-- CONSTRUCTORES CARRERA A CARRERA -->
         <section class="stats-section">
             <h2 class="stats-section-title">📈 Evolución constructores carrera a carrera</h2>
+            <p class="muted-text" style="margin:0 0 0.9rem">Cuenta solo los puntos de carrera; los puntos de sprint no están incluidos.</p>
             <div class="card" style="padding:1.5rem">
                 ${buildConstructorsChart(constructorRaceHistory)}
             </div>
@@ -1708,7 +1710,7 @@ function computeSeasonRecords() {
     const PTS = [25,18,15,12,10,8,6,4,2,1];
 
     // Leader
-    const leader = drivers[0];
+    const leader = window.getSortedDrivers()[0];
     const leaderColor = window.getTeamColor(leader.teamSlug);
 
     // Best single race (most points in one race)
@@ -1845,7 +1847,7 @@ function buildBarChart(dataBySlug, label) {
 
 function buildResultsMatrix() {
     const races = window.races;
-    const top10 = window.drivers.slice(0, 10);
+    const top10 = window.getSortedDrivers().slice(0, 10);
     const PTS = [25,18,15,12,10,8,6,4,2,1];
 
     if (!races.length) return '<p style="color:var(--muted);padding:1rem">Sin carreras disputadas.</p>';
@@ -2008,7 +2010,7 @@ function renderTimeline() {
     const drivers = window.drivers;
     const races = window.races;
     const PTS = [25,18,15,12,10,8,6,4,2,1];
-    const top8 = drivers.slice(0, 8);
+    const top8 = window.getSortedDrivers().slice(0, 8);
 
     // Build cumulative points after each race
     const cumData = {}; // slug → [pts after each race]
@@ -2103,7 +2105,8 @@ function renderTimeline() {
     el.innerHTML = `
         <!-- Chart -->
         <div class="card" style="padding:1.5rem">
-            <h2 style="margin:0 0 1rem;font-size:1rem">Evolución del campeonato — Top 8</h2>
+            <h2 style="margin:0 0 0.4rem;font-size:1rem">Evolución del campeonato — Top 8</h2>
+            <p class="muted-text" style="margin:0 0 1rem">Cuenta solo los puntos de carrera; los puntos de sprint no están incluidos.</p>
             <svg viewBox="0 0 ${W} ${H}" style="width:100%;overflow:visible">
                 ${yLabels}${xLabels}${lines}
             </svg>
@@ -2483,19 +2486,19 @@ function exportCalendarICS() {
     const races = window.calendar;
     const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//F1 Info ARG//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
 
+    const fmtUTC = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const stamp = fmtUTC(new Date());
+
     races.forEach(race => {
-        const dateStr = race.date.replace(/-/g, '');
-        const timeStr = race.time ? race.time.replace(':', '') + '00' : '120000';
-        // Convert Argentina time (UTC-3) to UTC
-        const hour = race.time ? parseInt(race.time.split(':')[0]) + 3 : 15;
-        const timeUTC = String(hour % 24).padStart(2,'0') + (race.time?.split(':')[1] || '00') + '00';
-        const dtStart = `${dateStr}T${timeUTC}Z`;
-        // Race is ~2h
-        const endHour = String((hour + 2) % 24).padStart(2,'0');
-        const dtEnd = `${dateStr}T${endHour}${(race.time?.split(':')[1] || '00')}00Z`;
+        // La hora de data.js es de Argentina (UTC-3); Date se encarga de pasar al día correcto en UTC
+        const startDate = new Date(`${race.date}T${race.time || '12:00'}:00-03:00`);
+        const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // la carrera dura ~2 hs
+        const dtStart = fmtUTC(startDate);
+        const dtEnd = fmtUTC(endDate);
 
         lines.push('BEGIN:VEVENT');
         lines.push(`UID:f1arg-2026-r${race.round}@formula1arg`);
+        lines.push(`DTSTAMP:${stamp}`);
         lines.push(`DTSTART:${dtStart}`);
         lines.push(`DTEND:${dtEnd}`);
         lines.push(`SUMMARY:🏎 ${race.name} 2026`);
@@ -2779,7 +2782,7 @@ function initDriverSwipe() {
     const currentSlug = params.get('slug');
     if (!currentSlug) return;
 
-    const drivers = window.drivers;
+    const drivers = window.getSortedDrivers();
     const idx = drivers.findIndex(d => d.slug === currentSlug);
     if (idx < 0) return;
 
@@ -2873,7 +2876,7 @@ function shareStandings() {
     ctx.fillText(`Después de ${racesDone} carrera${racesDone !== 1 ? 's' : ''}`, 24, 58);
 
     // Rows
-    window.drivers.slice(0, ROWS).forEach((d, i) => {
+    window.getSortedDrivers().slice(0, ROWS).forEach((d, i) => {
         const y = HEADER_H + i * ROW_H;
         const color = window.getTeamColor(d.teamSlug);
 

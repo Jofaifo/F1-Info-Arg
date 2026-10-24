@@ -19,55 +19,55 @@ window.calendarSessions = {
         support: ['f2'],
         tv: { fox: 'live', disney: 'live' },
         sessions: [
-            { type:'fp',       label:'Práctica 1',    day:'Vie 14 mar', time:'05:30 hs' },
-            { type:'qual',     label:'Clasif. Sprint', day:'Vie 14 mar', time:'09:30 hs' },
-            { type:'sprint',   label:'Carrera Sprint', day:'Sáb 15 mar', time:'05:00 hs' },
-            { type:'qual',     label:'Clasificación',  day:'Sáb 15 mar', time:'09:00 hs' },
-            { type:'race',     label:'Carrera',        day:'Dom 16 mar', time:'07:00 hs' },
+            { type:'fp',       label:'Práctica 1',    day:'Vie 13 mar', time:'05:30 hs' },
+            { type:'qual',     label:'Clasif. Sprint', day:'Vie 13 mar', time:'09:30 hs' },
+            { type:'sprint',   label:'Carrera Sprint', day:'Sáb 14 mar', time:'05:00 hs' },
+            { type:'qual',     label:'Clasificación',  day:'Sáb 14 mar', time:'09:00 hs' },
+            { type:'race',     label:'Carrera',        day:'Dom 15 mar', time:'07:00 hs' },
         ]
     },
     3: { // Japón
         support: ['f2'],
         tv: { fox: 'live', disney: 'live' },
         sessions: [
-            { type:'fp',   label:'Práctica 1',   day:'Vie 28 mar', time:'04:30 hs' },
-            { type:'fp',   label:'Práctica 2',   day:'Vie 28 mar', time:'08:00 hs' },
-            { type:'fp',   label:'Práctica 3',   day:'Sáb 29 mar', time:'04:30 hs' },
-            { type:'qual', label:'Clasificación',day:'Sáb 29 mar', time:'08:00 hs' },
-            { type:'race', label:'Carrera',      day:'Dom 30 mar', time:'06:00 hs' },
+            { type:'fp',   label:'Práctica 1',   day:'Vie 27 mar', time:'04:30 hs' },
+            { type:'fp',   label:'Práctica 2',   day:'Vie 27 mar', time:'08:00 hs' },
+            { type:'fp',   label:'Práctica 3',   day:'Sáb 28 mar', time:'04:30 hs' },
+            { type:'qual', label:'Clasificación',day:'Sáb 28 mar', time:'08:00 hs' },
+            { type:'race', label:'Carrera',      day:'Dom 29 mar', time:'06:00 hs' },
         ]
     },
     4: { // Miami — Sprint
         support: ['f2'],
         tv: { fox: 'live', disney: 'live' },
         sessions: [
-            { type:'fp',     label:'Práctica 1',    day:'Vie 2 may',  time:'19:30 hs' },
-            { type:'qual',   label:'Clasif. Sprint', day:'Vie 2 may',  time:'23:00 hs' },
-            { type:'sprint', label:'Carrera Sprint', day:'Sáb 3 may',  time:'19:00 hs' },
-            { type:'qual',   label:'Clasificación',  day:'Sáb 3 may',  time:'23:00 hs' },
-            { type:'race',   label:'Carrera',        day:'Dom 4 may',  time:'14:00 hs' },
+            { type:'fp',     label:'Práctica 1',    day:'Vie 1 may',  time:'19:30 hs' },
+            { type:'qual',   label:'Clasif. Sprint', day:'Vie 1 may',  time:'23:00 hs' },
+            { type:'sprint', label:'Carrera Sprint', day:'Sáb 2 may',  time:'19:00 hs' },
+            { type:'qual',   label:'Clasificación',  day:'Sáb 2 may',  time:'23:00 hs' },
+            { type:'race',   label:'Carrera',        day:'Dom 3 may',  time:'14:00 hs' },
         ]
     },
     5: { // Canadá — Sprint
         support: ['f2'],
         tv: { fox: 'live', disney: 'live' },
         sessions: [
-            { type:'fp',     label:'Práctica 1',    day:'Vie 23 may', time:'13:30 hs' },
-            { type:'qual',   label:'Clasif. Sprint', day:'Vie 23 may', time:'17:30 hs' },
-            { type:'sprint', label:'Carrera Sprint', day:'Sáb 24 may', time:'13:00 hs' },
-            { type:'qual',   label:'Clasificación',  day:'Sáb 24 may', time:'17:00 hs' },
-            { type:'race',   label:'Carrera',        day:'Dom 25 may', time:'17:00 hs' },
+            { type:'fp',     label:'Práctica 1',    day:'Vie 22 may', time:'13:30 hs' },
+            { type:'qual',   label:'Clasif. Sprint', day:'Vie 22 may', time:'17:30 hs' },
+            { type:'sprint', label:'Carrera Sprint', day:'Sáb 23 may', time:'13:00 hs' },
+            { type:'qual',   label:'Clasificación',  day:'Sáb 23 may', time:'17:00 hs' },
+            { type:'race',   label:'Carrera',        day:'Dom 24 may', time:'17:00 hs' },
         ]
     },
     6: { // Mónaco
         support: ['f2','f3','fa'],
         tv: { fox: 'delayed', disney: 'live' },
         sessions: [
-            { type:'fp',   label:'Práctica 1',   day:'Jue 5 jun',  time:'14:30 hs' },
-            { type:'fp',   label:'Práctica 2',   day:'Vie 6 jun',  time:'13:30 hs' },
-            { type:'fp',   label:'Práctica 3',   day:'Sáb 7 jun',  time:'12:30 hs' },
-            { type:'qual', label:'Clasificación',day:'Sáb 7 jun',  time:'16:00 hs' },
-            { type:'race', label:'Carrera',      day:'Dom 8 jun',  time:'10:00 hs' },
+            { type:'fp',   label:'Práctica 1',   day:'Jue 4 jun',  time:'14:30 hs' },
+            { type:'fp',   label:'Práctica 2',   day:'Vie 5 jun',  time:'13:30 hs' },
+            { type:'fp',   label:'Práctica 3',   day:'Sáb 6 jun',  time:'12:30 hs' },
+            { type:'qual', label:'Clasificación',day:'Sáb 6 jun',  time:'16:00 hs' },
+            { type:'race', label:'Carrera',      day:'Dom 7 jun',  time:'10:00 hs' },
         ]
     },
     7: { // Barcelona-Catalunya

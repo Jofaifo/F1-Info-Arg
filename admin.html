@@ -529,6 +529,11 @@ let adminDrivers     = JSON.parse(JSON.stringify(window.drivers));
 let adminConstructors = JSON.parse(JSON.stringify(window.constructors));
 let adminRaces   = JSON.parse(JSON.stringify(window.races));
 let adminCalendar = JSON.parse(JSON.stringify(window.calendar));
+// data.js calcula `status` según la fecha de hoy; el panel trabaja con el estado guardado (savedStatus)
+adminCalendar.forEach(r => {
+    if (r.savedStatus !== undefined) r.status = r.savedStatus;
+    delete r.savedStatus;
+});
 
 const PTS_MAP = [25,18,15,12,10,8,6,4,2,1];
 

@@ -792,7 +792,7 @@ window.calendar = [
     { round:1,  date:'2026-03-08', name:'GP de Australia',          circuit:'Melbourne',         flag:'🇦🇺', flagImg:'img/flags/au.png', time:null,    sprint:false, status:'done',     winner:'George Russell' },
     { round:2,  date:'2026-03-15', name:'GP de China',              circuit:'Shanghai',          flag:'🇨🇳', flagImg:'img/flags/cn.png', time:null,    sprint:true,  status:'done',     winner:'Kimi Antonelli' },
     { round:3,  date:'2026-03-29', name:'GP de Japón',              circuit:'Suzuka',            flag:'🇯🇵', flagImg:'img/flags/jp.png', time:null,    sprint:false, status:'done',     winner:'Kimi Antonelli' },
-    { round:4,  date:'2026-05-03', name:'GP de Miami',              circuit:'Miami Gardens',     flag:'🇺🇸', flagImg:'img/flags/us.png', time:'14:00', sprint:true,  status:'done',     winner:'Lando Norris' },
+    { round:4,  date:'2026-05-03', name:'GP de Miami',              circuit:'Miami Gardens',     flag:'🇺🇸', flagImg:'img/flags/us.png', time:'14:00', sprint:true,  status:'done',     winner:'Kimi Antonelli' },
     { round:5,  date:'2026-05-24', name:'GP de Canadá',             circuit:'Montreal',          flag:'🇨🇦', flagImg:'img/flags/ca.png', time:'17:00', sprint:true,  status:'done',     winner:'Kimi Antonelli' },
     { round:6,  date:'2026-06-07', name:'GP de Mónaco',             circuit:'Montecarlo',        flag:'🇲🇨', flagImg:'img/flags/mc.png', time:'10:00', sprint:false, status:'done',     winner:'Kimi Antonelli' },
     { round:7,  date:'2026-06-14', name:'GP de Barcelona-Catalunya',circuit:'Montmeló',          flag:'🇪🇸', flagImg:'img/flags/es.png', time:'10:00', sprint:false, status:'done',     winner:'Lewis Hamilton' },
@@ -808,12 +808,34 @@ window.calendar = [
     { round:17, date:'2026-10-25', name:'GP de EE.UU.',             circuit:'Austin',            flag:'🇺🇸', flagImg:'img/flags/us.png', time:'17:00', sprint:false, status:'upcoming', winner:null },
     { round:18, date:'2026-11-01', name:'GP de México',             circuit:'CDMX',              flag:'🇲🇽', flagImg:'img/flags/mx.png', time:'17:00', sprint:false, status:'upcoming', winner:null },
     { round:19, date:'2026-11-08', name:'GP de Brasil',             circuit:'Interlagos',        flag:'🇧🇷', flagImg:'img/flags/br.png', time:'14:00', sprint:false, status:'upcoming', winner:null },
-    { round:20, date:'2026-11-21', name:'GP de Las Vegas',          circuit:'Las Vegas Strip',   flag:'🇺🇸', flagImg:'img/flags/us.png', time:'01:00', sprint:false, status:'upcoming', winner:null, lateNight:true },
+    { round:20, date:'2026-11-22', name:'GP de Las Vegas',          circuit:'Las Vegas Strip',   flag:'🇺🇸', flagImg:'img/flags/us.png', time:'01:00', sprint:false, status:'upcoming', winner:null, lateNight:true },
     { round:21, date:'2026-11-29', name:'GP de Qatar',              circuit:'Lusail',            flag:'🇶🇦', flagImg:'img/flags/qa.png', time:'13:00', sprint:false, status:'upcoming', winner:null },
     { round:22, date:'2026-12-06', name:'GP de Abu Dhabi',          circuit:'Yas Marina',        flag:'🇦🇪', flagImg:'img/flags/ae.png', time:'10:00', sprint:false, status:'upcoming', winner:null },
 ];
 
 // ─── UTILIDADES ───────────────────────────────────────────────────────────────
+// ─── ESTADO DE LAS CARRERAS (se calcula con la fecha de hoy) ────────────────
+// El `status` escrito a mano arriba se conserva en `savedStatus` (lo usa el panel
+// de admin). Para el sitio: una carrera está 'done' si ya figura así o si pasaron
+// 3 hs desde su inicio; la primera que falta es 'next' y el resto 'upcoming'.
+(function () {
+    const RACE_WINDOW_MS = 3 * 60 * 60 * 1000;
+    const now = Date.now();
+    let nextAssigned = false;
+    window.calendar.forEach(r => {
+        r.savedStatus = r.status;
+        const start = new Date(`${r.date}T${r.time || '12:00'}:00-03:00`).getTime();
+        if (r.status === 'done' || now > start + RACE_WINDOW_MS) {
+            r.status = 'done';
+        } else if (!nextAssigned) {
+            r.status = 'next';
+            nextAssigned = true;
+        } else {
+            r.status = 'upcoming';
+        }
+    });
+})();
+
 window.slugify = function(text) {
     return String(text).toLowerCase().normalize('NFD')
         .replace(/\p{Diacritic}/gu, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -821,6 +843,24 @@ window.slugify = function(text) {
 window.findDriverBySlug  = s => window.drivers.find(d => d.slug === s);
 window.findConstructorBySlug = s => window.constructors.find(t => t.slug === s);
 window.getTeamColor = s => window.teamColors[s] || '#888';
+// Pilotos ordenados como el campeonato: puntos y, si empatan, desempate por
+// "cuenta atrás" (más 1º puestos, luego más 2º, etc.) y por último alfabético.
+// Es el único lugar que define el orden; no confiar en el orden del array window.drivers.
+window.getSortedDrivers = function () {
+    const finishes = d => {
+        const c = new Array(22).fill(0);
+        (d.raceResults || []).forEach(p => { if (p >= 1 && p <= 22) c[p - 1]++; });
+        return c;
+    };
+    const cache = new Map(window.drivers.map(d => [d, finishes(d)]));
+    return [...window.drivers].sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        const ca = cache.get(a), cb = cache.get(b);
+        for (let i = 0; i < 22; i++) if (cb[i] !== ca[i]) return cb[i] - ca[i];
+        return a.name.localeCompare(b.name, 'es');
+    });
+};
+
 window.getCumulativePoints = function(driver) {
     const pts = [25,18,15,12,10,8,6,4,2,1];
     let cum = 0;
