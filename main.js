@@ -3,32 +3,40 @@ function getTeamImage(teamSlug) {
     return team && team.image ? team.image : null;
 }
 
+// Helpers: texto sin tildes ni mayúsculas, escape de HTML y localStorage que no rompe la página
+function norm(s) { return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const safeStorage = {
+    get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+    set(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* modo privado o sin espacio */ } }
+};
+
 function searcher(query) {
     if (!query || typeof query !== 'string') return [];
-    const q = query.trim().toLowerCase();
+    const q = norm(query.trim());
 
     const driverMatches = window.drivers
         .filter(driver =>
-            driver.name.toLowerCase().includes(q) ||
-            driver.team.toLowerCase().includes(q) ||
-            (driver.nationality && driver.nationality.toLowerCase().includes(q)) ||
-            (driver.code && driver.code.toLowerCase().includes(q))
+            norm(driver.name).includes(q) ||
+            norm(driver.team).includes(q) ||
+            (driver.nationality && norm(driver.nationality).includes(q)) ||
+            (driver.code && norm(driver.code).includes(q))
         )
         .map(driver => ({ ...driver, type: 'driver' }));
 
     const constructorMatches = window.constructors
         .filter(team =>
-            team.name.toLowerCase().includes(q) ||
-            (team.origin && team.origin.toLowerCase().includes(q)) ||
-            (team.engine && team.engine.toLowerCase().includes(q))
+            norm(team.name).includes(q) ||
+            (team.origin && norm(team.origin).includes(q)) ||
+            (team.engine && norm(team.engine).includes(q))
         )
         .map(team => ({ ...team, type: 'constructor' }));
 
     const circuitMatches = (window.circuits || [])
         .filter(c =>
-            c.name.toLowerCase().includes(q) ||
-            (c.city && c.city.toLowerCase().includes(q)) ||
-            (c.country && c.country.toLowerCase().includes(q))
+            norm(c.name).includes(q) ||
+            (c.city && norm(c.city).includes(q)) ||
+            (c.country && norm(c.country).includes(q))
         )
         .map(c => ({ ...c, type: 'circuit' }));
 
@@ -620,8 +628,8 @@ function initCalendarFilters() {
 }
 
 const SESSION_DURATION_MIN = {
-    fp1: 60, fp2: 60, fp3: 60,
-    quali: 60, 'sprint-quali': 45,
+    fp: 60, fp1: 60, fp2: 60, fp3: 60,
+    qual: 60, quali: 60, 'sprint-quali': 45,
     sprint: 40, race: 130
 };
 const MONTH_ABBR = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep:8, oct:9, nov:10, dic:11 };
@@ -1318,13 +1326,13 @@ function renderGlossary(filter = '', catFilter = 'Todos') {
     const emptyQ = document.getElementById('glossary-empty-q');
     if (!list) return;
 
-    const q = filter.trim().toLowerCase();
+    const q = norm(filter.trim());
     const terms = window.glossaryTerms.filter(t => {
         const matchCat = catFilter === 'Todos' || t.cat === catFilter;
         const matchQ = !q ||
-            t.term.toLowerCase().includes(q) ||
-            (t.full && t.full.toLowerCase().includes(q)) ||
-            t.def.toLowerCase().includes(q);
+            norm(t.term).includes(q) ||
+            (t.full && norm(t.full).includes(q)) ||
+            norm(t.def).includes(q);
         return matchCat && matchQ;
     });
 
@@ -2134,11 +2142,11 @@ function renderTimeline() {
 const PRED_KEY = 'f1arg_predictions';
 
 function loadPredictions() {
-    try { return JSON.parse(localStorage.getItem(PRED_KEY)) || {}; }
+    try { return JSON.parse(safeStorage.get(PRED_KEY)) || {}; }
     catch { return {}; }
 }
 function savePredictions(data) {
-    localStorage.setItem(PRED_KEY, JSON.stringify(data));
+    safeStorage.set(PRED_KEY, JSON.stringify(data));
 }
 
 function renderPredictor() {
@@ -2351,7 +2359,7 @@ window.triviaQuestions = [
     { q: '¿Qué es el "parc fermé"?', opts: ['Zona de boxes','Período en que no se pueden modificar los autos','Área de prensa','Pit lane cerrado'], ans: 1, cat: 'Reglamento' },
     { q: '¿Cuántos puntos se dan al ganador de una carrera Sprint?', opts: ['10','12','8','25'], ans: 2, cat: 'Reglamento' },
     { q: '¿Qué país tiene más GPs en el calendario 2026?', opts: ['Reino Unido','Alemania','Estados Unidos','Italia'], ans: 2, cat: '2026' },
-    { q: '¿Cuál es el circuito más corto del calendario 2026?', opts: ['Mónaco','Red Bull Ring','Hungaroring','Zandvoort'], ans: 1, cat: 'Circuitos' },
+    { q: '¿Cuál es el circuito más corto del calendario 2026?', opts: ['Mónaco','Red Bull Ring','Hungaroring','Zandvoort'], ans: 0, cat: 'Circuitos' },
     { q: '¿Qué circuito es conocido como el "Templo de la Velocidad"?', opts: ['Silverstone','Suzuka','Monza','Spa'], ans: 2, cat: 'Circuitos' },
     { q: '¿En qué país se ubica el circuito de Suzuka?', opts: ['China','Corea del Sur','Japón','Tailandia'], ans: 2, cat: 'Circuitos' },
     { q: '¿Cuántos títulos de constructores tiene Ferrari?', opts: ['12','14','16','18'], ans: 2, cat: 'Historia' },
@@ -2446,8 +2454,8 @@ function renderTrivia() {
         const msg = pct >= 80 ? '¡Experto en F1!' : pct >= 60 ? '¡Buen nivel!' : pct >= 40 ? 'Podés mejorar' : 'Seguí aprendiendo';
 
         // Save best score
-        const prev = parseInt(localStorage.getItem(TRIVIA_KEY) || '0');
-        if (state.score > prev) localStorage.setItem(TRIVIA_KEY, state.score);
+        const prev = parseInt(safeStorage.get(TRIVIA_KEY) || '0');
+        if (state.score > prev) safeStorage.set(TRIVIA_KEY, state.score);
 
         el.innerHTML = `
             <div class="card trivia-results-card">
@@ -2594,7 +2602,7 @@ function initGlobalSearch() {
 
     // Search logic
     input.addEventListener('input', () => {
-        const q = input.value.trim().toLowerCase();
+        const q = norm(input.value.trim());
         selectedIdx = -1;
         if (!q) { resultsEl.innerHTML = ''; return; }
 
@@ -2603,10 +2611,10 @@ function initGlobalSearch() {
         // Drivers
         window.drivers.forEach(d => {
             const score =
-                (d.name.toLowerCase().includes(q) ? 3 : 0) +
-                (d.code.toLowerCase().includes(q) ? 2 : 0) +
-                (d.nationality?.toLowerCase().includes(q) ? 1 : 0) +
-                (d.team.toLowerCase().includes(q) ? 1 : 0);
+                (norm(d.name).includes(q) ? 3 : 0) +
+                (norm(d.code).includes(q) ? 2 : 0) +
+                (norm(d.nationality).includes(q) ? 1 : 0) +
+                (norm(d.team).includes(q) ? 1 : 0);
             if (score > 0) results.push({
                 type: 'driver', score,
                 title: d.name, sub: `${d.team} · ${d.nationality}`,
@@ -2619,9 +2627,9 @@ function initGlobalSearch() {
         // Teams
         window.constructors.forEach(t => {
             const score =
-                (t.name.toLowerCase().includes(q) ? 3 : 0) +
-                (t.origin?.toLowerCase().includes(q) ? 1 : 0) +
-                (t.engine?.toLowerCase().includes(q) ? 1 : 0);
+                (norm(t.name).includes(q) ? 3 : 0) +
+                (norm(t.origin).includes(q) ? 1 : 0) +
+                (norm(t.engine).includes(q) ? 1 : 0);
             if (score > 0) results.push({
                 type: 'team', score,
                 title: t.name, sub: `${t.base} · Motor ${t.engine}`,
@@ -2634,9 +2642,9 @@ function initGlobalSearch() {
         // Circuits
         (window.circuits || []).forEach(c => {
             const score =
-                (c.name.toLowerCase().includes(q) ? 3 : 0) +
-                (c.country.toLowerCase().includes(q) ? 2 : 0) +
-                (c.city.toLowerCase().includes(q) ? 1 : 0);
+                (norm(c.name).includes(q) ? 3 : 0) +
+                (norm(c.country).includes(q) ? 2 : 0) +
+                (norm(c.city).includes(q) ? 1 : 0);
             if (score > 0) results.push({
                 type: 'circuit', score,
                 title: c.name, sub: `${c.country} · ${c.length} km`,
@@ -2648,7 +2656,7 @@ function initGlobalSearch() {
 
         // Glossary
         (window.glossaryTerms || []).forEach(t => {
-            if (t.term.toLowerCase().includes(q) || t.full?.toLowerCase().includes(q)) {
+            if (norm(t.term).includes(q) || norm(t.full).includes(q)) {
                 results.push({
                     type: 'glossary', score: 1,
                     title: t.term, sub: t.full || t.cat,
@@ -2671,14 +2679,14 @@ function initGlobalSearch() {
             { title: 'Circuitos', sub: 'Trazados y récords', href: 'circuits.html', icon: '🗺' },
         ];
         pages.forEach(p => {
-            if (p.title.toLowerCase().includes(q)) results.push({ ...p, type: 'page', score: 2, color: '#888' });
+            if (norm(p.title).includes(q)) results.push({ ...p, type: 'page', score: 2, color: '#888' });
         });
 
         results.sort((a,b) => b.score - a.score);
         const top = results.slice(0, 8);
 
         if (!top.length) {
-            resultsEl.innerHTML = `<div class="gs-empty">Sin resultados para "<strong>${q}</strong>"</div>`;
+            resultsEl.innerHTML = `<div class="gs-empty">Sin resultados para "<strong>${escapeHtml(input.value.trim())}</strong>"</div>`;
             return;
         }
 
@@ -2717,8 +2725,8 @@ function initGlobalSearch() {
 const THEME_KEY = 'f1arg_theme';
 
 function initTheme() {
-    const saved = localStorage.getItem(THEME_KEY);
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const saved = safeStorage.get(THEME_KEY);
+    const prefersDark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
     const isDark = saved ? saved === 'dark' : prefersDark;
     applyTheme(isDark ? 'dark' : 'light', false);
     injectThemeToggle();
@@ -2726,7 +2734,7 @@ function initTheme() {
 
 function applyTheme(theme, save = true) {
     document.documentElement.setAttribute('data-theme', theme);
-    if (save) localStorage.setItem(THEME_KEY, theme);
+    if (save) safeStorage.set(THEME_KEY, theme);
     const btn = document.getElementById('theme-toggle-btn');
     if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
 }
@@ -2816,6 +2824,9 @@ function initDriverSwipe() {
 
     // Arrow keys
     document.addEventListener('keydown', e => {
+        const t = e.target;
+        if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+        if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         if (e.key === 'ArrowLeft' && prevDriver) window.location.href = `driver.html?slug=${prevDriver.slug}`;
         if (e.key === 'ArrowRight' && nextDriver) window.location.href = `driver.html?slug=${nextDriver.slug}`;
     });
@@ -2921,7 +2932,7 @@ function shareStandings() {
 
     // Download / share
     canvas.toBlob(blob => {
-        if (navigator.share && navigator.canShare({ files: [new File([blob], 'f1-standings.png', { type: 'image/png' })] })) {
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'f1-standings.png', { type: 'image/png' })] })) {
             navigator.share({
                 title: 'Campeonato F1 2026',
                 text: `Top 10 después de ${window.races.length} carreras`,
@@ -3163,14 +3174,14 @@ function scheduleRaceNotifications() {
     const now = new Date();
 
     // Store in localStorage for SW to pick up
-    const scheduled = JSON.parse(localStorage.getItem('f1arg_notifs') || '[]');
+    const scheduled = JSON.parse(safeStorage.get('f1arg_notifs') || '[]');
     scheduled.push({
         title: `🏎 Mañana: ${nextRace.name}`,
         body: `${nextRace.circuit} · ${nextRace.time} hs Argentina`,
         scheduledFor: oneDayBefore.toISOString(),
         raceRound: nextRace.round
     });
-    localStorage.setItem('f1arg_notifs', JSON.stringify(scheduled));
+    safeStorage.set('f1arg_notifs', JSON.stringify(scheduled));
 }
 
 // Inject notify button into index if present
