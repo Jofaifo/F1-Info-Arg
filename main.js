@@ -754,10 +754,6 @@ function initPage() {
         initToday();
         return;
     }
-    if (body.classList.contains('page-livrees')) {
-        renderLivrees();
-        return;
-    }
     if (body.classList.contains('page-stats')) {
         renderStats();
         return;
@@ -1028,7 +1024,7 @@ function renderCircuits() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BLOQUE 1 — GLOSARIO, ROOKIES, ESTE DÍA EN LA F1, LIVRÉES
+// BLOQUE 1 — GLOSARIO, ROOKIES, ESTE DÍA EN LA F1
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ─── DATOS: GLOSARIO F1 2026 ─────────────────────────────────────────────────
@@ -1584,212 +1580,6 @@ function initToday() {
         renderToday(todayOffset);
     });
 }
-
-// ─── RENDER: LIVRÉES ──────────────────────────────────────────────────────────
-function renderLivrees() {
-    const grid = document.getElementById('livrées-grid');
-    if (!grid) return;
-
-    grid.innerHTML = (window.constructors || []).map(team => {
-        const drivers = window.drivers.filter(d => d.teamSlug === team.slug);
-        const c1 = team.color || '#888';
-        // Generate a simple livery SVG based on team colors
-        const livSvg = generateLiverySVG(team);
-
-        const livreeDesc = {
-            'mercedes':        'Negro y plata con acentos verde Petronas. El W17 mantiene la identidad oscura de las últimas temporadas.',
-            'ferrari':         'Rojo Scuderia más intenso que en 2025, inspirado en la livrée especial de Monza. Más blanco alrededor del cockpit.',
-            'mclaren':         'Papaya naranja predominante con negro antracita. Campeones del mundo 2025 sin cambios drásticos.',
-            'red-bull-racing': 'Azul más intenso en homenaje al nuevo socio Ford. Combinado con rojo y amarillo dorado.',
-            'alpine':          'Azul eléctrico con rosa BWT como en temporadas anteriores. Continuidad visual pese al cambio a motor Mercedes.',
-            'racing-bulls':    'Cuerpo blanco con acentos azul Ford y rojo. Elegida la más bella de la grilla por los fanáticos en 2025.',
-            'haas':            'Blanco predominante con negro y rojo Toyota Gazoo Racing, nuevo patrocinador titular.',
-            'williams':        'Azul gloss vibrante con negro en los pontones y detalles blancos. Celebra el aniversario del FW14B de Mansell.',
-            'audi':            'Plata con acentos naranja en la parte trasera. Los aros de Audi en el alerón trasero son el elemento más llamativo.',
-            'cadillac':        'Negro y blanco asimétrico con patrón inspirado en el chevron de Cadillac. Revelada en el Super Bowl LX.',
-            'aston-martin':    'Verde British Racing Green oscuro con dorado Aramco. Primer auto diseñado por Adrian Newey.',
-        }[team.slug] || team.description || '';
-        return `<div class="card livree-card" style="border-top: 3px solid ${c1}">
-            <div class="livree-team-header">
-                <img src="${team.flagImg || ''}" class="detail-flag-img" alt="">
-                <div>
-                    <h3 class="livree-team-name" style="color:${c1}">${team.name}</h3>
-                    <div class="livree-engine">${team.engine} Power Unit · ${team.base}</div>
-                </div>
-            </div>
-            <div class="livree-svg-wrap">
-                ${livSvg}
-            </div>
-            <div class="livree-colors">
-                ${getLiveryColors(team).map(col => `
-                    <div class="livree-color-chip">
-                        <div class="livree-color-swatch" style="background:${col.hex}"></div>
-                        <span class="livree-color-name">${col.name}</span>
-                    </div>
-                `).join('')}
-            </div>
-            ${livreeDesc ? `<p class="livree-desc">${livreeDesc}</p>` : ''}
-            <div class="livree-drivers">
-                ${drivers.map(d => `
-                    <a href="driver.html?slug=${d.slug}" class="livree-driver-chip">
-                        <img src="${d.flagImg}" class="livree-driver-flag" alt="">
-                        <span>${d.name}</span>
-                        <span class="livree-driver-num" style="color:${c1}">#${d.code}</span>
-                    </a>
-                `).join('')}
-            </div>
-        </div>`;
-    }).join('');
-}
-
-function getLiveryColors(team) {
-    // Colores reales de las livrées 2026 según presentaciones oficiales
-    const palettes = {
-        'mercedes':        [{ hex:'#1a1a1a', name:'Negro' }, { hex:'#A8A8A8', name:'Plata' }, { hex:'#00D2BE', name:'Verde Petronas' }],
-        'ferrari':         [{ hex:'#E8002D', name:'Rosso Scuderia' }, { hex:'#FFFFFF', name:'Blanco' }, { hex:'#FFCC00', name:'Giallo' }],
-        'mclaren':         [{ hex:'#FF8000', name:'Papaya Orange' }, { hex:'#1a1a1a', name:'Antracita' }, { hex:'#FFFFFF', name:'Blanco' }],
-        'red-bull-racing': [{ hex:'#1B3FAB', name:'Azul Ford/RBR' }, { hex:'#CC1E4A', name:'Rojo' }, { hex:'#FFC906', name:'Amarillo' }],
-        'alpine':          [{ hex:'#005AFF', name:'Azul Alpine' }, { hex:'#FF67C7', name:'Rosa BWT' }, { hex:'#FFFFFF', name:'Blanco' }],
-        'racing-bulls':    [{ hex:'#FFFFFF', name:'Blanco' }, { hex:'#3671C6', name:'Azul Ford' }, { hex:'#CC1E4A', name:'Rojo' }],
-        'haas':            [{ hex:'#FFFFFF', name:'Blanco' }, { hex:'#111111', name:'Negro' }, { hex:'#E10600', name:'Rojo Toyota' }],
-        'williams':        [{ hex:'#005AFF', name:'Azul gloss' }, { hex:'#111111', name:'Negro' }, { hex:'#FFFFFF', name:'Blanco' }],
-        'audi':            [{ hex:'#C0C0C0', name:'Plata' }, { hex:'#111111', name:'Negro' }, { hex:'#FF6600', name:'Naranja acento' }],
-        'cadillac':        [{ hex:'#111111', name:'Negro' }, { hex:'#FFFFFF', name:'Blanco' }, { hex:'#888888', name:'Gris Chevron' }],
-        'aston-martin':    [{ hex:'#00594F', name:'British Racing Green' }, { hex:'#FFD700', name:'Dorado Aramco' }, { hex:'#FFFFFF', name:'Blanco' }],
-    };
-    return palettes[team.slug] || [{ hex: team.color, name: 'Color principal' }];
-}
-
-function generateLiverySVG(team) {
-    const cols = getLiveryColors(team);
-    const c1 = cols[0]?.hex || '#888';
-    const c2 = cols[1]?.hex || '#222';
-    const c3 = cols[2]?.hex || '#fff';
-
-    // Livery-specific schemes for accurate rendering
-    const schemes = {
-        'mercedes': {
-            body: '#1a1a1a', sidepod: '#2a2a2a', nose: '#1a1a1a',
-            accent: '#00D2BE', cockpit: '#111', halo: '#00D2BE',
-            frontWing: '#00D2BE', rearWing: '#1a1a1a', stripe: '#A8A8A8'
-        },
-        'ferrari': {
-            body: '#E8002D', sidepod: '#cc0022', nose: '#E8002D',
-            accent: '#FFFFFF', cockpit: '#cc0022', halo: '#FFCC00',
-            frontWing: '#E8002D', rearWing: '#E8002D', stripe: '#FFFFFF'
-        },
-        'mclaren': {
-            body: '#FF8000', sidepod: '#1a1a1a', nose: '#FF8000',
-            accent: '#FFFFFF', cockpit: '#1a1a1a', halo: '#FF8000',
-            frontWing: '#FF8000', rearWing: '#1a1a1a', stripe: '#FF8000'
-        },
-        'red-bull-racing': {
-            body: '#1B3FAB', sidepod: '#162f85', nose: '#1B3FAB',
-            accent: '#FFC906', cockpit: '#CC1E4A', halo: '#FFC906',
-            frontWing: '#1B3FAB', rearWing: '#1B3FAB', stripe: '#CC1E4A'
-        },
-        'alpine': {
-            body: '#005AFF', sidepod: '#0044cc', nose: '#005AFF',
-            accent: '#FF67C7', cockpit: '#003db3', halo: '#FFFFFF',
-            frontWing: '#005AFF', rearWing: '#005AFF', stripe: '#FF67C7'
-        },
-        'racing-bulls': {
-            body: '#FFFFFF', sidepod: '#e8e8e8', nose: '#FFFFFF',
-            accent: '#3671C6', cockpit: '#3671C6', halo: '#3671C6',
-            frontWing: '#FFFFFF', rearWing: '#3671C6', stripe: '#CC1E4A'
-        },
-        'haas': {
-            body: '#FFFFFF', sidepod: '#e8e8e8', nose: '#FFFFFF',
-            accent: '#E10600', cockpit: '#111111', halo: '#E10600',
-            frontWing: '#FFFFFF', rearWing: '#111111', stripe: '#E10600'
-        },
-        'williams': {
-            body: '#005AFF', sidepod: '#0044cc', nose: '#005AFF',
-            accent: '#FFFFFF', cockpit: '#111111', halo: '#FFFFFF',
-            frontWing: '#005AFF', rearWing: '#111111', stripe: '#FFFFFF'
-        },
-        'audi': {
-            body: '#C0C0C0', sidepod: '#aaaaaa', nose: '#C0C0C0',
-            accent: '#FF6600', cockpit: '#111111', halo: '#FF6600',
-            frontWing: '#C0C0C0', rearWing: '#111111', stripe: '#FF6600'
-        },
-        'cadillac': {
-            body: '#111111', sidepod: '#222222', nose: '#111111',
-            accent: '#FFFFFF', cockpit: '#FFFFFF', halo: '#888888',
-            frontWing: '#111111', rearWing: '#FFFFFF', stripe: '#888888'
-        },
-        'aston-martin': {
-            body: '#00594F', sidepod: '#004a42', nose: '#00594F',
-            accent: '#FFD700', cockpit: '#003d36', halo: '#FFD700',
-            frontWing: '#00594F', rearWing: '#00594F', stripe: '#FFD700'
-        },
-    };
-
-    const s = schemes[team.slug] || {
-        body: c1, sidepod: c2, nose: c1, accent: c3,
-        cockpit: c2, halo: c3, frontWing: c1, rearWing: c2, stripe: c3
-    };
-
-    const textColor = ['#FFFFFF','#FFF','white'].includes(s.body.toUpperCase()) || s.body === '#FFFFFF' ? '#111' : '#fff';
-
-    return `<svg viewBox="0 0 440 170" class="livree-svg" xmlns="http://www.w3.org/2000/svg">
-        <!-- Ground shadow -->
-        <ellipse cx="218" cy="158" rx="155" ry="7" fill="rgba(0,0,0,0.35)"/>
-
-        <!-- === REAR WING === -->
-        <rect x="352" y="52" width="6" height="42" rx="2" fill="${s.rearWing}"/>
-        <rect x="342" y="48" width="40" height="8" rx="3" fill="${s.rearWing}"/>
-        <rect x="344" y="56" width="36" height="4" rx="1" fill="${s.accent}" opacity="0.7"/>
-
-        <!-- === MAIN BODY === -->
-        <!-- Sidepods -->
-        <path d="M 155,88 L 150,112 L 285,112 L 298,102 L 308,88 Z" fill="${s.sidepod}"/>
-        <!-- Body top surface -->
-        <path d="M 68,92 L 82,70 L 108,58 L 148,50 L 210,48 L 272,50 L 308,58 L 330,72 L 340,88 L 335,98 L 68,98 Z" fill="${s.body}"/>
-        <!-- Livery stripe -->
-        <path d="M 108,58 L 310,66" fill="none" stroke="${s.stripe}" stroke-width="3.5" stroke-linecap="round" opacity="0.55"/>
-
-        <!-- === ENGINE COVER / INTAKE === -->
-        <path d="M 190,48 L 195,40 L 230,38 L 245,46" fill="none" stroke="${s.accent}" stroke-width="2" opacity="0.5"/>
-
-        <!-- === COCKPIT === -->
-        <path d="M 163,50 L 172,34 L 192,27 L 218,27 L 238,32 L 248,48 Z" fill="${s.cockpit}"/>
-        <!-- Windscreen -->
-        <path d="M 172,34 L 182,26 L 218,25 L 234,32" fill="none" stroke="${s.accent}" stroke-width="1.5" opacity="0.6"/>
-
-        <!-- === HALO === -->
-        <path d="M 170,34 Q 200,22 232,30" fill="none" stroke="${s.halo}" stroke-width="5" stroke-linecap="round"/>
-        <path d="M 195,26 L 198,34" stroke="${s.halo}" stroke-width="4" stroke-linecap="round"/>
-
-        <!-- === NOSE === -->
-        <path d="M 68,92 L 80,70 L 92,74 L 88,92 Z" fill="${s.nose}"/>
-        <path d="M 68,92 L 55,94 L 50,97 L 55,99 L 68,98 Z" fill="${s.nose}"/>
-
-        <!-- === FRONT WING === -->
-        <rect x="28" y="95" width="40" height="5" rx="2" fill="${s.frontWing}"/>
-        <rect x="20" y="97" width="56" height="3.5" rx="1.5" fill="${s.accent}" opacity="0.7"/>
-        <rect x="26" y="100" width="44" height="3" rx="1.5" fill="${s.frontWing}"/>
-
-        <!-- === WHEELS (with tires) === -->
-        <!-- Front wheel -->
-        <ellipse cx="110" cy="116" rx="6" ry="18" fill="#1a1a1a"/>
-        <rect x="92" y="100" width="12" height="32" rx="6" fill="#1a1a1a"/>
-        <ellipse cx="98" cy="116" rx="6" ry="18" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
-        <ellipse cx="98" cy="116" rx="3.5" ry="11" fill="#2d2d2d"/>
-        <ellipse cx="98" cy="116" rx="1.5" ry="5" fill="${s.accent}"/>
-        <!-- Rear wheel -->
-        <rect x="296" y="98" width="14" height="36" rx="7" fill="#1a1a1a"/>
-        <ellipse cx="303" cy="116" rx="7" ry="20" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
-        <ellipse cx="303" cy="116" rx="4" ry="12" fill="#2d2d2d"/>
-        <ellipse cx="303" cy="116" rx="1.8" ry="5.5" fill="${s.accent}"/>
-
-        <!-- === TEAM NAME === -->
-        <text x="195" y="80" text-anchor="middle" fill="${textColor === '#111' ? '#333' : '#fff'}"
-              font-size="10" font-weight="900" font-family="Arial Black, Arial"
-              letter-spacing="2.5" opacity="0.9">${team.name.toUpperCase()}</text>
-    </svg>`;
-}
-
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // BLOQUE 2 — ESTADÍSTICAS, TIMELINE, RÉCORDS, HEAD-TO-HEAD, MATRIZ
@@ -2874,7 +2664,6 @@ function initGlobalSearch() {
             { title: 'Trivia', sub: '¿Cuánto sabés de F1?', href: 'trivia.html', icon: '🧠' },
             { title: 'Rookies', sub: 'Debutantes 2026', href: 'rookies.html', icon: '🌟' },
             { title: 'Glosario', sub: 'Términos F1 2026', href: 'glossary.html', icon: '📖' },
-            { title: 'Livrées', sub: 'Diseños de los autos', href: 'livrees.html', icon: '🎨' },
             { title: 'Calendario', sub: 'Carreras 2026', href: 'calendar.html', icon: '📅' },
             { title: 'Circuitos', sub: 'Trazados y récords', href: 'circuits.html', icon: '🗺' },
         ];

@@ -1,5 +1,5 @@
 // F1 Info ARG — Service Worker v4
-const CACHE_NAME = 'f1arg-v4';
+const CACHE_NAME = 'f1arg-v5';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -15,7 +15,6 @@ const STATIC_ASSETS = [
     '/rookies.html',
     '/glossary.html',
     '/today.html',
-    '/livrees.html',
     '/search.html',
     '/driver.html',
     '/team.html',
