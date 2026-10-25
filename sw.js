@@ -1,80 +1,65 @@
-// F1 Info ARG — Service Worker v4
-const CACHE_NAME = 'f1arg-v6';
+// F1 Info ARG — Service Worker
+// Rutas relativas al lugar donde está instalado el sitio: funciona en la raíz de un dominio
+// (Cloudflare) y también bajo una subcarpeta (GitHub Pages).
+const CACHE_NAME = 'f1arg-v7';
+const SCOPE = self.registration.scope;
 const STATIC_ASSETS = [
-    '/',
-    '/index.html',
-    '/drivers.html',
-    '/teams.html',
-    '/calendar.html',
-    '/circuits.html',
-    '/compare.html',
-    '/stats.html',
-    '/timeline.html',
-    '/predictor.html',
-    '/trivia.html',
-    '/rookies.html',
-    '/glossary.html',
-    '/today.html',
-    '/search.html',
-    '/driver.html',
-    '/team.html',
-    '/data.js',
-    '/main.js',
-    '/style.css',
-    '/img/logo-f1arg.jpg',
-];
+    './', 'index.html', 'drivers.html', 'teams.html', 'calendar.html', 'circuits.html',
+    'compare.html', 'stats.html', 'timeline.html', 'predictor.html', 'trivia.html',
+    'rookies.html', 'glossary.html', 'today.html', 'search.html', 'driver.html', 'team.html',
+    'data.js', 'calendar-sessions.js', 'main.js', 'style.css', 'manifest.json',
+    'img/logo-f1arg.jpg', 'img/icon-192.png'
+].map(p => new URL(p, SCOPE).href);
+const OFFLINE_FALLBACK = new URL('index.html', SCOPE).href;
 
-// Install: cache all static assets
+// Instalación: se guardan los archivos base de a uno, así que si alguno falla no se cae toda la instalación
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(STATIC_ASSETS))
+            .then(cache => Promise.allSettled(STATIC_ASSETS.map(url => cache.add(url))))
             .then(() => self.skipWaiting())
     );
 });
 
-// Activate: clean old caches
+// Activación: borrar cachés viejas
 self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-        ).then(() => self.clients.claim())
+        caches.keys()
+            .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+            .then(() => self.clients.claim())
     );
 });
 
-// Fetch: cache-first for assets, network-first for HTML
-self.addEventListener('fetch', event => {
-    const url = new URL(event.request.url);
-    if (event.request.method !== 'GET') return;
+function saveInCache(request, response) {
+    // Solo se guardan respuestas correctas (nunca un 404 o un error del servidor)
+    if (!response || !response.ok) return;
+    const copy = response.clone();
+    caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+}
 
-    // Cache-first solo para imágenes/fuentes (cambian poco). JS y CSS van
-    // network-first más abajo, para que un deploy nuevo se vea al toque
-    // y no dependa de acordarse de bumpear CACHE_NAME cada vez.
-    if (/\.(jpg|jpeg|png|svg|gif|ico|woff2?)$/.test(url.pathname)) {
+self.addEventListener('fetch', event => {
+    const request = event.request;
+    if (request.method !== 'GET') return;
+    const url = new URL(request.url);
+    if (url.origin !== self.location.origin) return;   // APIs y CDNs externos: que los maneje el navegador
+
+    // Imágenes y fuentes: primero la caché (cambian poco)
+    if (/\.(jpg|jpeg|png|svg|gif|ico|webp|woff2?)$/i.test(url.pathname)) {
         event.respondWith(
-            caches.match(event.request).then(cached => {
-                if (cached) return cached;
-                return fetch(event.request).then(res => {
-                    const clone = res.clone();
-                    caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
-                    return res;
-                }).catch(() => new Response('', { status: 408 }));
-            })
+            caches.match(request).then(cached => cached || fetch(request).then(res => {
+                saveInCache(request, res);
+                return res;
+            }).catch(() => new Response('', { status: 408 })))
         );
         return;
     }
 
-    // Network-first para HTML, JS y CSS: siempre intenta traer la versión
-    // más nueva del servidor, y solo cae a la caché si no hay conexión.
+    // HTML, JS, CSS y JSON: primero la red (un deploy nuevo se ve enseguida) y la caché si no hay conexión
     event.respondWith(
-        fetch(event.request)
-            .then(res => {
-                const clone = res.clone();
-                caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
-                return res;
-            })
-            .catch(() => caches.match(event.request)
-                .then(cached => cached || caches.match('/index.html'))
-            )
+        fetch(request)
+            .then(res => { saveInCache(request, res); return res; })
+            .catch(() => caches.match(request).then(cached =>
+                cached || (request.mode === 'navigate' ? caches.match(OFFLINE_FALLBACK) : undefined)
+            ))
     );
 });

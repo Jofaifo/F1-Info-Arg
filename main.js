@@ -241,6 +241,7 @@ function renderDriverDetail(slug) {
         detail.innerHTML = '<p class="empty-message">No existe esta mini página de piloto.</p>';
         return;
     }
+    document.title = `${driver.name} — F1 Info ARG`;
 
     const color = (window.teamColors && window.teamColors[driver.teamSlug]) || '#888';
     const sortedDrivers = window.getSortedDrivers();
@@ -390,6 +391,7 @@ function renderTeamDetail(slug) {
         detail.innerHTML = '<p class="empty-message">No existe esta mini página de escudería.</p>';
         return;
     }
+    document.title = `${team.name} — F1 Info ARG`;
 
     const color = (window.teamColors && window.teamColors[team.slug]) || '#888';
     const sortedConstructors = [...window.constructors].sort((a, b) => b.points - a.points);
@@ -789,7 +791,6 @@ if (document.readyState === 'loading') {
         initCalendarExport();
         initDriverSwipe();
         initShareButtons();
-        injectNotifyButton();
         initPWA();
         // Scroll animations run last, after page content is rendered
         requestAnimationFrame(() => initScrollAnimations());
@@ -801,7 +802,6 @@ if (document.readyState === 'loading') {
     initCalendarExport();
     initDriverSwipe();
     initShareButtons();
-    injectNotifyButton();
     initPWA();
     requestAnimationFrame(() => initScrollAnimations());
 }
@@ -1039,11 +1039,11 @@ function renderCircuits() {
 window.glossaryTerms = [
     // Reglamento 2026 — novedades
     {
-        term: 'MOS',
-        full: 'Manual Override System',
+        term: 'MOM',
+        full: 'Manual Override Mode',
         cat: '2026',
         tag: 'NUEVO 2026',
-        def: 'Reemplaza al DRS desde 2026. El piloto activa manualmente un modo de mayor potencia eléctrica en las zonas designadas de la pista. A diferencia del DRS, no abre un alerón trasero sino que boost la MGU-K para generar hasta 350 kW adicionales. Se puede usar en zonas de detección marcadas por la FIA, igual que el antiguo DRS.'
+        def: 'Modo de adelantamiento de 2026, también llamado Overtake Mode. Cuando el piloto está cerca del auto de adelante, recibe un impulso extra de energía eléctrica: la MGU-K mantiene hasta 350 kW hasta unos 337 km/h, algo que normalmente se reduce a esas velocidades. Cumple el rol de ayuda para adelantar que tenía el DRS y se habilita en zonas de detección marcadas por la FIA.'
     },
     {
         term: 'Power Unit 2026',
@@ -1064,7 +1064,7 @@ window.glossaryTerms = [
         full: 'Aerodinámica activa',
         cat: '2026',
         tag: 'NUEVO 2026',
-        def: 'En 2026 los autos tienen elementos aerodinámicos que cambian su posición en carrera de forma automática: modo "Z" (baja resistencia) en rectas y modo "X" (máxima carga) en curvas. El sistema lo gestiona la ECU y no el piloto directamente, reemplazando la función del DRS.'
+        def: 'En 2026 los alerones delantero y trasero son móviles y tienen dos modos: modo Z (máxima carga aerodinámica, para curvas) y modo X (baja resistencia, para rectas). El piloto activa el modo X en las zonas habilitadas y se desactiva al frenar. Junto con el Manual Override Mode reemplaza al DRS.'
     },
     {
         term: 'MGU-K',
@@ -1082,7 +1082,7 @@ window.glossaryTerms = [
         term: 'ERS',
         full: 'Energy Recovery System',
         cat: 'Motor',
-        def: 'Sistema de recuperación de energía. En 2026 solo incluye la MGU-K (ya no hay MGU-H). Recupera energía en los frenos y la almacena en la batería para ser usada como boost eléctrico, especialmente en las zonas de activación del MOS.'
+        def: 'Sistema de recuperación de energía. En 2026 solo incluye la MGU-K (ya no hay MGU-H). Recupera energía en los frenos y la almacena en la batería para ser usada como boost eléctrico, especialmente en las zonas de activación del Manual Override Mode (MOM).'
     },
     {
         term: 'Parc Fermé',
@@ -1184,7 +1184,7 @@ window.glossaryTerms = [
         term: 'Sprint',
         full: 'Carrera Sprint',
         cat: 'Formato',
-        def: 'Carrera corta de aproximadamente 100 km (un tercio de la distancia normal) que se disputa algunos fines de semana. En 2026 hay 6 fines de semana Sprint. La grilla Sprint se determina en una clasificación específica (Sprint Shootout). Los puntos son reducidos: 8-7-6-5-4-3-2-1 para los top 8.'
+        def: 'Carrera corta de aproximadamente 100 km (un tercio de la distancia normal) que se disputa algunos fines de semana. En 2026 hay 6 fines de semana Sprint. La grilla Sprint se determina en una clasificación específica (Sprint Qualifying). Los puntos son reducidos: 8-7-6-5-4-3-2-1 para los top 8.'
     },
     {
         term: 'Sprint Shootout',
@@ -1203,7 +1203,7 @@ window.glossaryTerms = [
         full: 'Drag Reduction System',
         cat: 'Histórico',
         tag: 'ELIMINADO 2026',
-        def: 'Sistema que permitía abrir el alerón trasero para reducir resistencia aerodinámica y facilitar adelantamientos. Estuvo vigente desde 2011 hasta 2025. En 2026 fue reemplazado por el MOS (Manual Override System) y la aerodinámica activa del nuevo reglamento.'
+        def: 'Sistema que permitía abrir el alerón trasero para reducir resistencia aerodinámica y facilitar adelantamientos. Estuvo vigente desde 2011 hasta 2025. En 2026 fue reemplazado por la aerodinámica activa (modos X y Z) y el Manual Override Mode del nuevo reglamento.'
     },
     {
         term: 'MGU-H',
@@ -1228,94 +1228,85 @@ window.glossaryTerms = [
         term: 'Punto extra por VR',
         full: 'Punto por vuelta rápida',
         cat: 'Puntuación',
-        def: 'Desde 2019, el piloto que registra la vuelta más rápida de la carrera recibe 1 punto extra, pero solo si termina dentro de los top 10. En 2026 este sistema sigue vigente. No aplica en las carreras Sprint.'
+        def: 'Entre 2019 y 2024, el piloto que registraba la vuelta más rápida de la carrera recibía 1 punto extra, pero solo si terminaba dentro de los 10 primeros. Ese punto se eliminó a partir de la temporada 2025, así que en 2026 ya no existe.'
     },
 ];
 
 // ─── DATOS: ESTE DÍA EN LA F1 ─────────────────────────────────────────────────
 // Formato: { month: 1-12, day: 1-31, year, title, desc, category }
 window.f1History = [
-    { month:1,  day:8,  year:1980, title:'Jody Scheckter anuncia su retiro', desc:'El campeón del mundo 1979 con Ferrari anuncia oficialmente su retiro de la Fórmula 1 tras una temporada 1980 complicada.', category:'Pilotos' },
-    { month:1,  day:17, year:2019, title:'Presentación del Williams FW42', desc:'Williams presenta el FW42, su monoplaza para la temporada 2019, iniciando la era de presentaciones digitales de autos en F1.', category:'Equipos' },
-    { month:2,  day:1,  year:2014, title:'Reglamento turbo V6', desc:'Entra en vigor el nuevo reglamento que introduce los motores turbo V6 híbridos en F1, los llamados power units que dominaron hasta 2025.', category:'Reglamento' },
-    { month:2,  day:14, year:2020, title:'Ferrari SF1000', desc:'Ferrari presenta el SF1000, el auto con el que Charles Leclerc y Sebastian Vettel disputarían la temporada 2020.', category:'Equipos' },
-    { month:3,  day:8,  year:1992, title:'Mansell gana en Sudáfrica', desc:'Nigel Mansell arranca la temporada 1992 con victoria en Kyalami, camino a su único título mundial con Williams.', category:'Carreras' },
-    { month:3,  day:15, year:1970, title:'Debut del Lotus 72', desc:'El revolucionario Lotus 72 de Colin Chapman hace su debut, introduciendo la distribución de peso adelantada y los pontones laterales que cambiarían el diseño de los autos de F1.', category:'Técnica' },
-    { month:3,  day:26, year:2000, title:'Michael Schumacher gana el GP de Australia', desc:'Schumacher arranca el año 2000 dominando en Melbourne, temporada en la que lograría su primer título con Ferrari tras 21 años de sequía del equipo.', category:'Carreras' },
-    { month:4,  day:1,  year:2001, title:'Ralf Schumacher gana en San Marino', desc:'Ralf Schumacher logra su segunda victoria en F1 en Imola, por delante de su hermano Michael en un doblete histórico de los Schumacher.', category:'Carreras' },
-    { month:4,  day:19, year:1970, title:'Fallece Bruce McLaren', desc:'El fundador del equipo McLaren fallece en un accidente probando el McLaren Can-Am en Goodwood. Tenía 32 años. Su equipo continuaría y se convertiría en uno de los más exitosos de la historia.', category:'Pilotos' },
-    { month:5,  day:3,  year:1987, title:'Alain Prost gana en Bélgica', desc:'Prost victorioso en Spa, en una temporada dominada por la rivalidad con Senna dentro del equipo McLaren.', category:'Carreras' },
-    { month:5,  day:10, year:1994, title:'Funeral de Ayrton Senna', desc:'Brasil despide a Ayrton Senna con un funeral de estado en São Paulo. Millones de personas se agolparon en las calles para despedir al tricampeón del mundo.', category:'Pilotos' },
-    { month:5,  day:23, year:1982, title:'Gilles Villeneuve fallece en Bélgica', desc:'El querido piloto canadiense fallece tras un accidente durante la clasificación del GP de Bélgica en Zolder. El circuito de Montreal lleva su nombre en su honor.', category:'Pilotos' },
-    { month:6,  day:5,  year:2011, title:'Sebastian Vettel en Monaco', desc:'Vettel gana en Montecarlo dominando toda la carrera y ampliando su ventaja en el campeonato 2011, temporada en la que se consagraría bicampeón del mundo.', category:'Carreras' },
-    { month:6,  day:11, year:1950, title:'Primer GP de la historia', desc:'Se disputa el primer Gran Premio del Campeonato Mundial de Fórmula 1 en Silverstone. Giuseppe Farina gana la carrera y se convertiría en el primer campeón del mundo de F1.', category:'Historia' },
-    { month:6,  day:14, year:1998, title:'Michael Schumacher gana en Canadá', desc:'Schumacher victorioso en Montreal con Ferrari, en una de las mejores actuaciones del año en su marcha hacia el título. Fue la primera victoria de Ferrari en Canadá desde 1985.', category:'Carreras' },
-    { month:6,  day:20, year:2010, title:'Mark Webber gana en Valencia', desc:'Webber logra una memorable victoria en el GP de Europa disputado en el circuito urbano de Valencia, en una carrera con múltiples incidentes.', category:'Carreras' },
-    { month:7,  day:2,  year:2017, title:'Lewis Hamilton gana en Austria', desc:'Hamilton derrota a su compañero Bottas en el Red Bull Ring en una carrera cerrada, manteniendo su ventaja en el campeonato 2017.', category:'Carreras' },
-    { month:7,  day:14, year:1996, title:'Damon Hill campeón virtual', desc:'Hill gana en Alemania y ya parece imparable hacia su primer título mundial, que confirmaría más adelante en Japón.', category:'Carreras' },
-    { month:7,  day:18, year:2021, title:'Verstappen y Hamilton chocan en Silverstone', desc:'El choque en la primera curva de Copse entre Verstappen y Hamilton se convierte en uno de los más polémicos de la historia reciente. Verstappen se lleva el peor parte y Hamilton gana.', category:'Incidentes' },
-    { month:7,  day:22, year:2007, title:'Ferrari presenta el sistema KERS', desc:'Ferrari anuncia que trabaja en el sistema de recuperación de energía cinética que introduciría en 2009, anticipándose a los cambios técnicos que vendrían.', category:'Técnica' },
-    { month:8,  day:1,  year:1976, title:'Niki Lauda sobrevive al fuego en Nürburgring', desc:'Niki Lauda sufre un terrible accidente en el Nürburgring y casi pierde la vida entre las llamas de su Ferrari. Su recuperación y regreso apenas 40 días después sigue siendo una de las historias más increíbles del deporte.', category:'Historia' },
-    { month:8,  day:13, year:2000, title:'Schumacher 41 victorias, récord de Prost', desc:'Michael Schumacher supera el récord de 41 victorias en F1 de Alain Prost al ganar en Hungría, convirtiéndose en el piloto con más victorias de la historia (hasta ese momento).', category:'Récords' },
-    { month:8,  day:27, year:2023, title:'Verstappen récord de victorias consecutivas', desc:'Max Verstappen gana su décima carrera consecutiva en el GP de Bélgica, rompiendo el récord histórico de victorias seguidas en una misma temporada.', category:'Récords' },
-    { month:9,  day:3,  year:2017, title:'Lewis Hamilton supera 300 puntos en 2017', desc:'Hamilton en racha imparable hacia su cuarto título, superando los 300 puntos en el campeonato de pilotos en la primera mitad de la temporada 2017.', category:'Récords' },
-    { month:9,  day:7,  year:2008, title:'Felipe Massa gana en Italia', desc:'Massa victorioso en Monza en su temporada más competitiva, en la que estuvo a un punto de ganar el campeonato del mundo perdido en el último segundo en Brasil.', category:'Carreras' },
-    { month:9,  day:11, year:2022, title:'Charles Leclerc gana en Monza', desc:'Leclerc triunfa en el Templo de la Velocidad ante su tifosi, logrando una de sus victorias más emotivas con Ferrari.', category:'Carreras' },
-    { month:9,  day:20, year:2015, title:'Lewis Hamilton campeón del mundo', desc:'Hamilton se consagra tricampeón del mundo en Japón con tres carreras de antelación, igualdando a Niki Lauda y Nelson Piquet. Sería el primero de cuatro títulos consecutivos.', category:'Campeones' },
-    { month:10, day:2,  year:2016, title:'Nico Rosberg gana en Malasia', desc:'Victoria de Rosberg en un fin de semana en que el motor de Hamilton falla, cambiando el rumbo del campeonato 2016 que Rosberg terminaría ganando.', category:'Carreras' },
-    { month:10, day:9,  year:2022, title:'Verstappen tetracampeón potencial', desc:'Verstappen se acerca al segundo título en Japón 2022 en circunstancias confusas con la lluvia y el Safety Car. Sería el inicio de la era dominante de Red Bull.', category:'Campeones' },
-    { month:10, day:21, year:2018, title:'Lewis Hamilton, quinto campeonato', desc:'Hamilton iguala a Juan Manuel Fangio con cinco títulos mundiales al ganar en México 2018, consolidándose como uno de los más grandes de la historia.', category:'Campeones' },
-    { month:11, day:1,  year:2020, title:'Hamilton iguala récord de Schumacher', desc:'Lewis Hamilton gana su séptimo campeonato del mundo en Turquía 2020, igualando el récord histórico de Michael Schumacher que parecía inalcanzable.', category:'Récords' },
-    { month:11, day:14, year:2021, title:'Verstappen lidera el campeonato en Brasil', desc:'Verstappen y Hamilton electrizan a la F1 con una batalla épica en Interlagos. Hamilton remonta desde el fondo y gana, pero el holandés mantiene la ventaja en el campeonato.', category:'Carreras' },
-    { month:11, day:22, year:2020, title:'Primer GP de Las Vegas nocturno', desc:'La F1 anuncia oficialmente el retorno del Gran Premio de Las Vegas para 2023, corriendo de noche por el Strip, con un formato completamente nuevo y espectacular.', category:'Historia' },
-    { month:12, day:8,  year:2019, title:'Carlos Sainz firma con McLaren', desc:'Sainz anuncia su fichaje por McLaren para 2019 luego de destacarse en Renault, iniciando el período de mayor crecimiento de su carrera.', category:'Pilotos' },
+    { month:2 , day:11, year:2020, title:'Ferrari presenta el SF1000', desc:'Ferrari presenta el SF1000, el auto con el que Charles Leclerc y Sebastian Vettel disputarían la temporada 2020.', category:'Equipos' },
+    { month:3 , day:1 , year:1992, title:'Mansell gana en Sudáfrica', desc:'Nigel Mansell arranca la temporada 1992 con victoria en Kyalami, camino a su único título mundial con Williams.', category:'Carreras' },
+    { month:3 , day:12, year:2000, title:'Michael Schumacher gana el GP de Australia', desc:'Schumacher arranca el año 2000 ganando en Melbourne, temporada en la que lograría su primer título con Ferrari tras 21 años de sequía del equipo.', category:'Carreras' },
+    { month:3 , day:16, year:2014, title:'Arranca la era híbrida V6 turbo', desc:'El GP de Australia 2014 estrena los motores V6 turbo híbridos. Nico Rosberg gana con Mercedes, el equipo que dominaría esa etapa del reglamento.', category:'Reglamento' },
+    { month:5 , day:1 , year:1994, title:'Fallece Ayrton Senna en Imola', desc:'Ayrton Senna, tricampeón del mundo, muere a los 34 años tras un accidente en la curva Tamburello durante el GP de San Marino. El día anterior había fallecido Roland Ratzenberger en la clasificación.', category:'Pilotos' },
+    { month:5 , day:5 , year:1994, title:'Funeral de Ayrton Senna', desc:'Brasil despide a Ayrton Senna con un funeral de estado en São Paulo. Millones de personas se agolparon en las calles para despedir al tricampeón del mundo.', category:'Pilotos' },
+    { month:5 , day:8 , year:1982, title:'Gilles Villeneuve fallece en Bélgica', desc:'El querido piloto canadiense fallece tras un accidente durante la clasificación del GP de Bélgica en Zolder. El circuito de Montreal lleva su nombre en su honor.', category:'Pilotos' },
+    { month:5 , day:13, year:1950, title:'Primer GP de la historia', desc:'Se disputa el primer Gran Premio del Campeonato Mundial de Fórmula 1 en Silverstone. Giuseppe Farina gana la carrera y se convertiría en el primer campeón del mundo de F1.', category:'Historia' },
+    { month:5 , day:16, year:2010, title:'Mark Webber gana en Mónaco', desc:'Webber gana en Montecarlo con Red Bull, una semana después de haber ganado en España.', category:'Carreras' },
+    { month:5 , day:17, year:1987, title:'Alain Prost gana en Bélgica', desc:'Prost gana en Spa con McLaren y supera el récord de victorias de Jackie Stewart al conseguir su triunfo número 28.', category:'Récords' },
+    { month:5 , day:29, year:2011, title:'Sebastian Vettel gana en Mónaco', desc:'Vettel gana en Montecarlo y amplía su ventaja en el campeonato 2011, temporada en la que se consagraría bicampeón del mundo.', category:'Carreras' },
+    { month:6 , day:2 , year:1970, title:'Fallece Bruce McLaren', desc:'El fundador del equipo McLaren fallece en un accidente probando el McLaren Can-Am en Goodwood. Tenía 32 años. Su equipo continuaría y se convertiría en uno de los más exitosos de la historia.', category:'Pilotos' },
+    { month:6 , day:7 , year:1998, title:'Michael Schumacher gana en Canadá', desc:'Schumacher victorioso en Montreal con Ferrari, en una de las mejores actuaciones del año en su marcha hacia el título. Fue la primera victoria de Ferrari en Canadá desde 1985.', category:'Carreras' },
+    { month:7 , day:9 , year:2017, title:'Bottas gana en Austria', desc:'Valtteri Bottas gana en el Red Bull Ring, por delante de Sebastian Vettel, y consigue la segunda victoria de su carrera en la F1.', category:'Carreras' },
+    { month:7 , day:18, year:2021, title:'Verstappen y Hamilton chocan en Silverstone', desc:'El choque en la curva Copse, en la primera vuelta, entre Verstappen y Hamilton se convierte en uno de los más polémicos de la historia reciente. Verstappen se lleva la peor parte y Hamilton gana la carrera.', category:'Incidentes' },
+    { month:7 , day:28, year:1996, title:'Damon Hill, camino al título', desc:'Hill gana en Alemania y se mete de lleno en la pelea por su primer título mundial, que confirmaría más adelante en Japón.', category:'Carreras' },
+    { month:8 , day:1 , year:1976, title:'Niki Lauda sobrevive al fuego en Nürburgring', desc:'Niki Lauda sufre un terrible accidente en el Nürburgring y casi pierde la vida entre las llamas de su Ferrari. Su recuperación y regreso apenas 42 días después sigue siendo una de las historias más increíbles del deporte.', category:'Historia' },
+    { month:9 , day:3 , year:2017, title:'Hamilton gana en Monza y pasa a liderar', desc:'Lewis Hamilton gana el GP de Italia y toma el liderazgo del campeonato 2017, camino a su cuarto título mundial.', category:'Carreras' },
+    { month:9 , day:3 , year:2023, title:'Verstappen: 10 victorias consecutivas', desc:'Max Verstappen gana el GP de Italia en Monza, su décima victoria seguida, y establece un nuevo récord de triunfos consecutivos en la Fórmula 1.', category:'Récords' },
+    { month:9 , day:7 , year:2008, title:'Felipe Massa gana en Bélgica', desc:'Massa recibe la victoria en Spa tras la sanción a Hamilton en la última vuelta. Ese año estuvo a un punto de ganar el campeonato, que se definió en la última curva de Brasil.', category:'Carreras' },
+    { month:9 , day:11, year:2022, title:'Verstappen gana en Monza', desc:'Max Verstappen gana el GP de Italia tras largar séptimo, en una carrera que terminó detrás del Safety Car. Charles Leclerc, que partía desde la pole, fue segundo.', category:'Carreras' },
+    { month:10, day:2 , year:2016, title:'Falla el motor de Hamilton en Malasia', desc:'Lewis Hamilton abandona cuando lideraba el GP de Malasia por una falla de motor, un golpe clave en la lucha por el campeonato 2016, que terminaría ganando Nico Rosberg. La carrera la ganó Daniel Ricciardo.', category:'Carreras' },
+    { month:10, day:9 , year:2022, title:'Verstappen, bicampeón en Japón', desc:'Max Verstappen gana el GP de Japón bajo la lluvia y se consagra campeón del mundo por segunda vez, en una carrera acortada que generó confusión sobre los puntos.', category:'Campeones' },
+    { month:10, day:25, year:2015, title:'Lewis Hamilton, tricampeón del mundo', desc:'Hamilton se consagra tricampeón del mundo en Austin (Estados Unidos) con tres carreras de antelación, igualando a Niki Lauda y Nelson Piquet. Era su tercer título, tras los de 2008 y 2014.', category:'Campeones' },
+    { month:10, day:28, year:2018, title:'Lewis Hamilton, quinto campeonato', desc:'Hamilton iguala a Juan Manuel Fangio con cinco títulos mundiales al terminar cuarto en México 2018, una carrera que ganó Verstappen.', category:'Campeones' },
+    { month:11, day:14, year:2021, title:'Verstappen lidera el campeonato en Brasil', desc:'Verstappen y Hamilton electrizan a la F1 con una batalla épica en Interlagos. Hamilton remonta desde el 10.º puesto y gana, pero el holandés mantiene la ventaja en el campeonato.', category:'Carreras' },
+    { month:11, day:15, year:2020, title:'Hamilton iguala récord de Schumacher', desc:'Lewis Hamilton gana su séptimo campeonato del mundo en Turquía 2020, igualando el récord histórico de Michael Schumacher que parecía inalcanzable.', category:'Récords' },
+    { month:11, day:18, year:2023, title:'Primer GP de Las Vegas moderno', desc:'La F1 corre por primera vez el Gran Premio de Las Vegas en el Strip, en una carrera nocturna de sábado. Ganó Max Verstappen, con Charles Leclerc segundo.', category:'Historia' },
     { month:12, day:12, year:2021, title:'Max Verstappen, primer campeón holandés', desc:'En la vuelta más dramática de la historia de la F1, Verstappen supera a Hamilton en la última vuelta del GP de Abu Dhabi 2021 para ganar su primer campeonato del mundo.', category:'Campeones' },
 ];
 
 // ─── DATOS: ROOKIES 2026 ──────────────────────────────────────────────────────
 window.rookieSlugs = [
+    'arvid-lindblad',
+    'franco-colapinto',
     'kimi-antonelli',
     'isack-hadjar',
-    'arvid-lindblad',
     'gabriel-bortoleto',
     'oliver-bearman',
 ];
 
 window.rookieExtra = {
+    'arvid-lindblad': {
+        dob: '26 de septiembre de 2007',
+        highlight: 'Debutante de 2026 con Racing Bulls: con 18 años, uno de los pilotos más jóvenes en estrenarse en la historia de la F1.',
+    },
+    'franco-colapinto': {
+        dob: '27 de mayo de 2003',
+        highlight: 'Debutó en 2024 con Williams, como primer argentino en la F1 desde 2001. En 2026 corre su primera temporada completa con Alpine.',
+    },
     'kimi-antonelli': {
         dob: '25 de agosto de 2006',
         hometown: 'Bolonia, Italia',
-        champion: 'F2 2024',
-        quote: '"Siempre soñé con esto. Ahora tengo que demostrarlo carrera a carrera."',
-        highlight: 'Lidera el campeonato en su primera temporada completa — el rookie más joven en lograrlo.',
+        champion: 'Fórmula Regional Europea 2023',
+        highlight: 'Debutó en 2025 con Mercedes y en 2026, en su segunda temporada, lidera el campeonato.',
     },
     'isack-hadjar': {
         dob: '28 de febrero de 2005',
         hometown: 'París, Francia',
         champion: 'F2 2024 (subcampeón)',
-        quote: '"Cada vuelta es un aprendizaje. Estoy absorbiendo todo lo que puedo."',
-        highlight: 'Consistente debut con Red Bull Racing, sumando puntos importantes.',
-    },
-    'arvid-lindblad': {
-        dob: '26 de septiembre de 2007',
-        hometown: 'Newark, Reino Unido',
-        champion: 'F3 2024',
-        quote: '"Soy el más joven de la parrilla pero eso no me detiene."',
-        highlight: 'Con 18 años, uno de los pilotos más jóvenes en debutar en la historia de la F1.',
+        highlight: 'Debutó en 2025 con Racing Bulls y en 2026 corre para Red Bull Racing, sumando puntos importantes.',
     },
     'gabriel-bortoleto': {
         dob: '14 de octubre de 2004',
         hometown: 'São Paulo, Brasil',
         champion: 'F3 2023, F2 2024',
-        quote: '"Brasil vuelve a tener un piloto peleando en F1. Eso me llena de orgullo."',
-        highlight: 'Campeón de F2 y F3 consecutivo — uno de los rookies más preparados de los últimos años.',
+        highlight: 'Campeón de F3 en 2023 y de F2 en 2024. Debutó en 2025 con Sauber y en 2026 corre para Audi.',
     },
     'oliver-bearman': {
         dob: '8 de mayo de 2005',
         hometown: 'Chelmsford, Reino Unido',
-        champion: 'F2 2023 (subcampeón)',
-        quote: '"Ya corrí para Ferrari en 2024. Ahora quiero demostrar que puedo pelear arriba con regularidad."',
-        highlight: 'Ya tenía experiencia en F1 por sustituciones. Su primera temporada completa confirma su talento.',
+        highlight: 'Debutó en 2024 reemplazando a Carlos Sainz en Ferrari. En 2026 corre su segunda temporada completa con Haas.',
     },
 };
 
@@ -1600,7 +1591,6 @@ function renderStats() {
 
     const drivers = window.drivers;
     const races   = window.races;
-    const PTS = [25,18,15,12,10,8,6,4,2,1];
 
     // ── Récords de temporada
     const records = computeSeasonRecords();
@@ -1713,7 +1703,6 @@ function renderStats() {
 function computeSeasonRecords() {
     const drivers = window.drivers;
     const races = window.races;
-    const PTS = [25,18,15,12,10,8,6,4,2,1];
 
     // Leader
     const leader = window.getSortedDrivers()[0];
@@ -1748,32 +1737,6 @@ function computeSeasonRecords() {
         if (valid.length >= 3) {
             const avg = valid.reduce((a,b) => a+b, 0) / valid.length;
             if (avg < bestAvg) { bestAvg = avg; bestAvgDriver = d; }
-        }
-    });
-
-    // Best team mate ratio
-    const teams = [...new Set(drivers.map(d => d.teamSlug))];
-    let bestH2H = null, bestH2HTeam = '';
-    teams.forEach(slug => {
-        const pair = drivers.filter(d => d.teamSlug === slug);
-        if (pair.length === 2) {
-            let winsA = 0, winsB = 0;
-            const n = Math.min((pair[0].raceResults||[]).length, (pair[1].raceResults||[]).length);
-            for (let i = 0; i < n; i++) {
-                const a = pair[0].raceResults[i], b = pair[1].raceResults[i];
-                if (a !== null && b !== null) {
-                    if (a < b) winsA++; else if (b < a) winsB++;
-                }
-            }
-            const total = winsA + winsB;
-            if (total > 0) {
-                const ratio = Math.max(winsA, winsB) / total;
-                if (!bestH2H || ratio > bestH2H.ratio) {
-                    const winner = winsA > winsB ? pair[0] : pair[1];
-                    bestH2H = { ratio, driver: winner, winsA, winsB, total };
-                    bestH2HTeam = pair[0].team;
-                }
-            }
         }
     });
 
@@ -1854,7 +1817,6 @@ function buildBarChart(dataBySlug, label) {
 function buildResultsMatrix() {
     const races = window.races;
     const top10 = window.getSortedDrivers().slice(0, 10);
-    const PTS = [25,18,15,12,10,8,6,4,2,1];
 
     if (!races.length) return '<p style="color:var(--muted);padding:1rem">Sin carreras disputadas.</p>';
 
@@ -1944,7 +1906,6 @@ function buildH2H() {
 
 function buildConstructorRaceHistory() {
     const teams = window.constructors;
-    const PTS = [25,18,15,12,10,8,6,4,2,1];
     const n = window.races.length;
     const history = {};
 
@@ -2013,7 +1974,6 @@ function renderTimeline() {
 
     const drivers = window.drivers;
     const races = window.races;
-    const PTS = [25,18,15,12,10,8,6,4,2,1];
     const top8 = window.getSortedDrivers().slice(0, 8);
 
     // Build cumulative points after each race
@@ -2333,7 +2293,7 @@ function renderPredictor() {
 window.triviaQuestions = [
     // 2026
     { q: '¿Quién lidera el campeonato de pilotos en 2026?', opts: ['George Russell','Kimi Antonelli','Charles Leclerc','Lando Norris'], ans: 1, cat: '2026' },
-    { q: '¿Qué reemplazó al DRS en el reglamento 2026?', opts: ['ERS Boost','Active Aero Mode','MOS (Manual Override System)','Kinetic Push'], ans: 2, cat: '2026' },
+    { q: '¿Qué reemplazó al DRS en el reglamento 2026?', opts: ['Aerodinámica activa y Manual Override Mode','Un segundo alerón fijo','Kinetic Push','Turbo Boost'], ans: 0, cat: '2026' },
     { q: '¿Cuántas carreras tiene el calendario 2026 después de las cancelaciones?', opts: ['24','23','22','21'], ans: 2, cat: '2026' },
     { q: '¿Cuál fue el primer equipo nuevo en entrar a la F1 en 2026?', opts: ['Audi','Cadillac','Andretti','Porsche'], ans: 1, cat: '2026' },
     { q: '¿Qué equipo presentó su livrée 2026 durante el Super Bowl LX?', opts: ['Audi','Williams','Cadillac','Haas'], ans: 2, cat: '2026' },
@@ -2371,8 +2331,7 @@ function renderTrivia() {
         current: 0,
         score: 0,
         answered: [],
-        finished: false,
-        catFilter: 'Todos'
+        finished: false
     };
 
     function shuffle(arr) {
@@ -2668,7 +2627,7 @@ function initGlobalSearch() {
             { title: 'Timeline', sub: 'Evolución del campeonato', href: 'timeline.html', icon: '📈' },
             { title: 'Predictor', sub: 'Predecí el próximo podio', href: 'predictor.html', icon: '🎯' },
             { title: 'Trivia', sub: '¿Cuánto sabés de F1?', href: 'trivia.html', icon: '🧠' },
-            { title: 'Rookies', sub: 'Debutantes 2026', href: 'rookies.html', icon: '🌟' },
+            { title: 'Rookies', sub: 'Nuevas caras 2026', href: 'rookies.html', icon: '🌟' },
             { title: 'Glosario', sub: 'Términos F1 2026', href: 'glossary.html', icon: '📖' },
             { title: 'Calendario', sub: 'Carreras 2026', href: 'calendar.html', icon: '📅' },
             { title: 'Circuitos', sub: 'Trazados y récords', href: 'circuits.html', icon: '🗺' },
@@ -2829,16 +2788,7 @@ function initDriverSwipe() {
 
 // ─── COMPARTIR RESULTADO COMO IMAGEN ─────────────────────────────────────────
 function initShareButtons() {
-    // Inject share button on driver detail and race result cards
-    document.querySelectorAll('.driver-detail-share-target, .race-result-card').forEach(el => {
-        const btn = document.createElement('button');
-        btn.className = 'share-img-btn';
-        btn.textContent = '📤 Compartir';
-        btn.addEventListener('click', () => shareAsImage(el));
-        el.appendChild(btn);
-    });
-
-    // Also add share to standings if on drivers page
+    // Botón flotante para compartir la clasificación (home y pilotos)
     if (document.body.classList.contains('page-home') || document.body.classList.contains('page-drivers')) {
         const fabShare = document.createElement('button');
         fabShare.className = 'share-fab-btn';
@@ -3059,17 +3009,6 @@ function shareComparison(dA, dB, colA, colB, posA, posB) {
     }, 'image/png');
 }
 
-function shareAsImage(el) {
-    // Fallback: just use Web Share API with text
-    const text = el.innerText?.slice(0, 200) || 'F1 Info ARG 2026';
-    if (navigator.share) {
-        navigator.share({ title: 'F1 Info ARG', text, url: window.location.href });
-    } else {
-        navigator.clipboard?.writeText(window.location.href);
-        alert('URL copiada al portapapeles');
-    }
-}
-
 // ─── PWA: SERVICE WORKER + INSTALL PROMPT ────────────────────────────────────
 function initPWA() {
     // Register service worker
@@ -3119,74 +3058,3 @@ function initPWA() {
     }
 }
 
-// ─── NOTIFICACIONES PUSH ──────────────────────────────────────────────────────
-function initNotifications() {
-    if (!('Notification' in window)) return;
-
-    const btn = document.getElementById('notify-btn');
-    if (!btn) return;
-
-    function updateBtn() {
-        if (Notification.permission === 'granted') {
-            btn.textContent = '🔔 Notificaciones activas';
-            btn.classList.add('notify-active');
-        } else if (Notification.permission === 'denied') {
-            btn.textContent = '🔕 Notificaciones bloqueadas';
-            btn.disabled = true;
-        } else {
-            btn.textContent = '🔔 Activar notificaciones de GP';
-        }
-    }
-    updateBtn();
-
-    btn.addEventListener('click', async () => {
-        if (Notification.permission === 'granted') {
-            // Test notification
-            new Notification('F1 Info ARG 🏎', {
-                body: 'Las notificaciones están activas. Te avisaremos antes de cada GP.',
-                icon: 'img/logo-f1arg.jpg'
-            });
-            return;
-        }
-        const result = await Notification.requestPermission();
-        updateBtn();
-        if (result === 'granted') {
-            new Notification('F1 Info ARG 🏎', {
-                body: '¡Notificaciones activadas! Te avisaremos antes de cada Gran Premio.',
-                icon: 'img/logo-f1arg.jpg'
-            });
-            scheduleRaceNotifications();
-        }
-    });
-}
-
-function scheduleRaceNotifications() {
-    const nextRace = window.calendar.find(r => r.status === 'next' || r.status === 'upcoming');
-    if (!nextRace || !nextRace.time) return;
-
-    const raceDate = new Date(`${nextRace.date}T${nextRace.time}:00-03:00`);
-    const oneDayBefore = new Date(raceDate - 24 * 60 * 60 * 1000);
-    const now = new Date();
-
-    // Store in localStorage for SW to pick up
-    const scheduled = JSON.parse(safeStorage.get('f1arg_notifs') || '[]');
-    scheduled.push({
-        title: `🏎 Mañana: ${nextRace.name}`,
-        body: `${nextRace.circuit} · ${nextRace.time} hs Argentina`,
-        scheduledFor: oneDayBefore.toISOString(),
-        raceRound: nextRace.round
-    });
-    safeStorage.set('f1arg_notifs', JSON.stringify(scheduled));
-}
-
-// Inject notify button into index if present
-function injectNotifyButton() {
-    const el = document.getElementById('notify-btn-wrap');
-    if (!el) return;
-    const btn = document.createElement('button');
-    btn.id = 'notify-btn';
-    btn.className = 'notify-btn';
-    btn.textContent = '🔔 Activar notificaciones de GP';
-    el.appendChild(btn);
-    initNotifications();
-}

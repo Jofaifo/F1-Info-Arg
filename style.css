@@ -2486,15 +2486,23 @@ p { margin: 0 0 1rem; color: var(--muted); }
 }
 .pwa-dismiss-btn:hover { background: rgba(255,255,255,0.08); }
 
-/* ─── NOTIFY BUTTON ──────────────────────────────────────────────────────────── */
-.notify-btn-wrap { text-align: center; padding: 0.5rem 0 0; }
-.notify-btn {
-    display: inline-flex; align-items: center; gap: 0.5rem;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
-    color: white; padding: 0.6rem 1.25rem; border-radius: 999px;
-    font-size: 0.85rem; font-weight: 700; cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+/* ─── ACCESIBILIDAD ──────────────────────────────────────────────────────────── */
+/* Texto solo para lectores de pantalla (etiquetas de buscadores, etc.) */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0);
+    white-space: nowrap; border: 0;
 }
-.notify-btn:hover { background: rgba(255,255,255,0.1); }
-.notify-btn.notify-active { border-color: rgba(110,255,153,0.4); color: #6eff99; }
-.notify-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+/* Foco visible al navegar con teclado (no aparece al hacer clic con el mouse) */
+:focus-visible { outline: 2px solid var(--accent-color, #E10600); outline-offset: 2px; }
+/* Quien tiene activada la opción "reducir movimiento" no ve animaciones ni transiciones largas */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
