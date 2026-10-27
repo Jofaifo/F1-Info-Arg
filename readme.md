@@ -60,4 +60,8 @@ python3 -m http.server 8000
 # y abrí http://localhost:8000
 ```
 
-> Para que las vistas previas al compartir un link (Open Graph) muestren una imagen, hay que agregar `og:image` con la URL completa del sitio.
+El sitio está en **https://f1-info-arg.pages.dev/** (Cloudflare Pages, que sirve las páginas sin `.html`: `drivers.html` pasa a `/drivers`). Las páginas ya traen la vista previa al compartir (`og:image`, `img/og-image.png`) y la URL canónica con ese dominio; si algún día cambia el dominio, hay que actualizarlo en los `<head>`, en `robots.txt`, en `tools/build-sitemap.js` y volver a correr:
+
+```bash
+node tools/build-sitemap.js   # regenera sitemap.xml (páginas + ficha de cada piloto y equipo)
+```

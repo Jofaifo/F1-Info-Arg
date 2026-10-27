@@ -1,7 +1,7 @@
 // F1 Info ARG — Service Worker
 // Rutas relativas al lugar donde está instalado el sitio: funciona en la raíz de un dominio
 // (Cloudflare) y también bajo una subcarpeta (GitHub Pages).
-const CACHE_NAME = 'f1arg-v8';
+const CACHE_NAME = 'f1arg-v9';
 const SCOPE = self.registration.scope;
 const STATIC_ASSETS = [
     './', 'index.html', 'drivers.html', 'teams.html', 'calendar.html', 'circuits.html',
