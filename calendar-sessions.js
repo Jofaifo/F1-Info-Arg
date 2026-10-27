@@ -170,7 +170,7 @@ window.calendarSessions = {
             { type:'race', label:'Carrera',      day:'Dom 27 sep', time:'08:00 hs' },
         ]
     },
-    16: { // Singapur — Sprint
+    17: { // Singapur — Sprint
         support: ['f2'],
         tv: { fox: 'delayed', disney: 'live' },
         sessions: [
@@ -181,7 +181,7 @@ window.calendarSessions = {
             { type:'race',   label:'Carrera',        day:'Dom 11 oct', time:'09:00 hs' },
         ]
     },
-    17: { // EE.UU.
+    18: { // EE.UU.
         support: ['f2','f3'],
         tv: { fox: 'live', disney: 'live' },
         sessions: [
@@ -192,7 +192,7 @@ window.calendarSessions = {
             { type:'race', label:'Carrera',      day:'Dom 25 oct', time:'17:00 hs' },
         ]
     },
-    18: { // México
+    19: { // México
         support: ['f2'],
         tv: { fox: 'live', disney: 'live' },
         sessions: [
@@ -203,7 +203,7 @@ window.calendarSessions = {
             { type:'race', label:'Carrera',      day:'Dom 1 nov',  time:'17:00 hs' },
         ]
     },
-    19: { // Brasil
+    20: { // Brasil
         support: ['f2','f3'],
         tv: { fox: 'live', disney: 'live' },
         sessions: [
@@ -214,7 +214,7 @@ window.calendarSessions = {
             { type:'race', label:'Carrera',      day:'Dom 8 nov',  time:'14:00 hs' },
         ]
     },
-    20: { // Las Vegas — madrugada
+    21: { // Las Vegas — madrugada
         support: [],
         tv: { fox: 'live', disney: 'live' },
         lateNight: true,
@@ -226,7 +226,7 @@ window.calendarSessions = {
             { type:'race', label:'Carrera',      day:'Dom 22 nov', time:'01:00 hs' },
         ]
     },
-    21: { // Qatar
+    22: { // Qatar
         support: ['f2'],
         tv: { fox: 'delayed', disney: 'live' },
         sessions: [
@@ -237,7 +237,7 @@ window.calendarSessions = {
             { type:'race', label:'Carrera',      day:'Dom 29 nov', time:'13:00 hs' },
         ]
     },
-    22: { // Abu Dhabi
+    23: { // Abu Dhabi
         support: ['f2','f3'],
         tv: { fox: 'live', disney: 'live' },
         sessions: [

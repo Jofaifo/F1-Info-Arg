@@ -120,7 +120,7 @@ function renderDriverStandings() {
         positionCell.textContent = idx + 1;
 
         const nameCell = document.createElement('td');
-        nameCell.textContent = driver.name;
+        nameCell.textContent = driver.name + (driver.substitute ? ' (suplente)' : '');
 
         const teamCell = document.createElement('td');
         teamCell.appendChild(createTeamCell(driver.team, driver.code, driver.colorClass, driver.teamSlug));
@@ -1860,7 +1860,7 @@ function buildH2H() {
     const races = window.races;
 
     return teams.map(team => {
-        const pair = drivers.filter(d => d.teamSlug === team.slug);
+        const pair = drivers.filter(d => d.teamSlug === team.slug && !d.substitute);
         if (pair.length < 2) return '';
         const [dA, dB] = pair;
         const color = window.getTeamColor(team.slug);
@@ -1910,13 +1910,10 @@ function buildConstructorRaceHistory() {
     const history = {};
 
     teams.forEach(team => {
-        const teamDrivers = window.drivers.filter(d => d.teamSlug === team.slug);
         let cum = 0;
         history[team.slug] = [];
         for (let i = 0; i < n; i++) {
-            teamDrivers.forEach(d => {
-                cum += window.getRoundPoints(d, i).total;
-            });
+            cum += window.getTeamRoundPoints(team.slug, i);
             history[team.slug].push(cum);
         }
     });
@@ -2096,7 +2093,24 @@ function renderTimeline() {
 // ─── PREDICTOR ───────────────────────────────────────────────────────────────
 const PRED_KEY = 'f1arg_predictions';
 
+// Al agregar el GP de Bahréin como ronda 16, las rondas siguientes se corrieron un lugar:
+// las predicciones ya guardadas de la ronda 16 en adelante se pasan a su número nuevo (una sola vez).
+const PRED_MIGRATION_KEY = 'f1arg_predictions_shift16';
+function migratePredictions() {
+    if (safeStorage.get(PRED_MIGRATION_KEY)) return;
+    let data = {};
+    try { data = JSON.parse(safeStorage.get(PRED_KEY)) || {}; } catch { data = {}; }
+    const shifted = {};
+    Object.keys(data).forEach(k => {
+        const round = parseInt(k, 10);
+        shifted[round >= 16 ? round + 1 : round] = data[k];
+    });
+    safeStorage.set(PRED_KEY, JSON.stringify(shifted));
+    safeStorage.set(PRED_MIGRATION_KEY, '1');
+}
+
 function loadPredictions() {
+    migratePredictions();
     try { return JSON.parse(safeStorage.get(PRED_KEY)) || {}; }
     catch { return {}; }
 }
@@ -2138,7 +2152,7 @@ function renderPredictor() {
     }
 
     // Build prediction form for next race
-    const driverOptions = window.drivers.map(d =>
+    const driverOptions = window.drivers.filter(d => !d.substitute).map(d =>
         `<option value="${d.name}">${d.name} (${d.team})</option>`
     ).join('');
 
@@ -2294,10 +2308,11 @@ window.triviaQuestions = [
     // 2026
     { q: '¿Quién lidera el campeonato de pilotos en 2026?', opts: ['George Russell','Kimi Antonelli','Charles Leclerc','Lando Norris'], ans: 1, cat: '2026' },
     { q: '¿Qué reemplazó al DRS en el reglamento 2026?', opts: ['Aerodinámica activa y Manual Override Mode','Un segundo alerón fijo','Kinetic Push','Turbo Boost'], ans: 0, cat: '2026' },
-    { q: '¿Cuántas carreras tiene el calendario 2026 después de las cancelaciones?', opts: ['24','23','22','21'], ans: 2, cat: '2026' },
+    { q: '¿Cuántas carreras tiene el calendario 2026 después de las cancelaciones y los cambios de sede?', opts: ['24','23','22','21'], ans: 1, cat: '2026' },
     { q: '¿Cuál fue el primer equipo nuevo en entrar a la F1 en 2026?', opts: ['Audi','Cadillac','Andretti','Porsche'], ans: 1, cat: '2026' },
     { q: '¿Qué equipo presentó su livrée 2026 durante el Super Bowl LX?', opts: ['Audi','Williams','Cadillac','Haas'], ans: 2, cat: '2026' },
-    { q: '¿Qué par de GPs fue cancelado en 2026 por conflicto bélico?', opts: ['Turquía y Rusia','Bahrein y Arabia Saudita','Israel y Emiratos','Qatar y Kuwait'], ans: 1, cat: '2026' },
+    { q: '¿Qué par de GPs fue cancelado en abril de 2026 por conflicto bélico?', opts: ['Turquía y Rusia','Bahrein y Arabia Saudita','Israel y Emiratos','Qatar y Kuwait'], ans: 1, cat: '2026' },
+    { q: '¿En qué circuito se corrió finalmente el GP de Bahréin 2026?', opts: ['Sakhir, en Bahréin','Sepang, en Malasia','Marina Bay, en Singapur','Lusail, en Qatar'], ans: 1, cat: '2026' },
     { q: '¿Qué equipo contrató a Adrian Newey para diseñar su auto 2026?', opts: ['Ferrari','Red Bull','Aston Martin','Williams'], ans: 2, cat: '2026' },
     { q: '¿Cuál es el motor proveedor de Alpine en 2026?', opts: ['Renault','Ferrari','Honda','Mercedes'], ans: 3, cat: '2026' },
     { q: '¿Quién ganó la primera carrera de 2026 en Australia?', opts: ['Kimi Antonelli','Lando Norris','George Russell','Charles Leclerc'], ans: 2, cat: '2026' },

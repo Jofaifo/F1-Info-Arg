@@ -567,7 +567,7 @@ function applyPendingSprint(roundNum, idx) {
 
 // Recalcula TODO desde las posiciones guardadas (carrera + sprint): puntos, victorias,
 // podios, orden con desempate, posición de cada piloto y puntos/posición de los equipos.
-// Los equipos suman a sus pilotos titulares; si hubo suplentes, ajustalo en la pestaña Campeonato.
+// Los equipos suman los puntos de quien corrió para ellos en cada ronda (ver teamByRound en data.js si hubo suplentes).
 function recalcStandings() {
     const n = adminRaces.length;
     adminDrivers.forEach(d => {
@@ -585,7 +585,7 @@ function recalcStandings() {
     adminDrivers = window.sortDrivers(adminDrivers);
     adminDrivers.forEach((d, i) => d.position = i + 1);
     adminConstructors.forEach(t => {
-        t.points = adminDrivers.filter(d => d.teamSlug === t.slug).reduce((s, d) => s + d.points, 0);
+        t.points = window.getTeamTotalPoints(t.slug, adminDrivers, adminRaces);
     });
     [...adminConstructors].sort((x, y) => y.points - x.points).forEach((t, i) => t.position = i + 1);
 }
@@ -735,9 +735,14 @@ function saveRaceResult() {
 
     if (!hasPositions) { showToast('Ingresá al menos una posición', true); return; }
 
-    const missingDrivers = adminDrivers.filter(d => positions[d.slug] === null);
-    if (missingDrivers.length) {
-        showToast(`Faltan ${missingDrivers.length} piloto(s): ${missingDrivers.map(d => d.code).join(', ')}. Cargá las ${adminDrivers.length} posiciones (los que abandonaron van en los últimos puestos).`, true);
+    const filledPositions = Object.values(positions).filter(p => p !== null);
+    if (filledPositions.length < 20) {
+        const notLoaded = adminDrivers.filter(d => positions[d.slug] === null).map(d => d.code).join(', ');
+        showToast(`Hay solo ${filledPositions.length} posiciones cargadas (se necesitan al menos 20). Sin posición: ${notLoaded}. Dejá en blanco únicamente a quien no corrió (suplentes); los que abandonaron van en los últimos puestos.`, true);
+        return;
+    }
+    if (Math.max(...filledPositions) !== filledPositions.length) {
+        showToast(`Las posiciones deben ser 1 a ${filledPositions.length} sin saltos (la más alta cargada es ${Math.max(...filledPositions)}).`, true);
         return;
     }
 
@@ -806,7 +811,7 @@ function saveRaceResult() {
             if (!nextAssigned) { r.status = 'next'; nextAssigned = true; } else { r.status = 'upcoming'; }
         });
     }
-    const sprintMissing = !!adminRaces[idx].sprint && adminDrivers.some(d => d.sprintResults[idx] == null);
+    const sprintMissing = !!adminRaces[idx].sprint && adminDrivers.every(d => d.sprintResults[idx] == null);
 
     // Show preview
     const previewCard = document.getElementById('race-preview-card');
@@ -1600,9 +1605,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const val = parseInt(document.getElementById('sprint-pos-' + d.slug)?.value);
                 if (!isNaN(val) && val >= 1 && val <= 22) sprintPositions[d.slug] = val;
             });
-            const missingSprint = adminDrivers.filter(d => !sprintPositions[d.slug]);
-            if (missingSprint.length) {
-                showToast(`Faltan ${missingSprint.length} piloto(s) en el Sprint: ${missingSprint.map(d => d.code).join(', ')}. Cargá las ${adminDrivers.length} posiciones.`, true);
+            const sprintLoaded = Object.keys(sprintPositions).length;
+            if (sprintLoaded < 20) {
+                const notLoaded = adminDrivers.filter(d => !sprintPositions[d.slug]).map(d => d.code).join(', ');
+                showToast(`Hay solo ${sprintLoaded} posiciones de Sprint cargadas (se necesitan al menos 20). Sin posición: ${notLoaded}.`, true);
+                return;
+            }
+            if (Math.max(...Object.values(sprintPositions)) !== sprintLoaded) {
+                showToast(`Las posiciones del Sprint deben ser 1 a ${sprintLoaded} sin saltos.`, true);
                 return;
             }
 

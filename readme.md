@@ -28,12 +28,16 @@ Sitio web en español con la temporada 2026 de la Fórmula 1: clasificación de 
 
 ## Cómo se guardan los resultados
 
-Cada piloto tiene `raceResults` y `sprintResults`, con una posición por ronda (`sprintResults` vale `null` si esa ronda no tuvo sprint). **Los puntos, victorias y podios se calculan a partir de esas posiciones**; los equipos suman los puntos de sus pilotos. El estado de cada carrera (`done`, `next`, `upcoming`) se calcula con la fecha de hoy al cargar el sitio.
+Cada piloto tiene `raceResults` y `sprintResults`, con una posición por ronda. Un `null` significa que esa ronda no tuvo sprint o que el piloto no corrió (por ejemplo, un suplente). **Los puntos, victorias y podios se calculan a partir de esas posiciones**; las poles y vueltas rápidas salen de `polePosition` y `fastestLap` de cada carrera en `races[]` (solo las del Gran Premio, no las del sprint).
+
+**Suplentes:** un piloto que reemplaza a otro se agrega a la lista con `substitute: true` (queda marcado como suplente en las tablas). Si un titular corre para otro equipo durante un fin de semana, se anota en `teamByRound`, por ejemplo `teamByRound: { 12: 'red-bull-racing' }`, y esos puntos suman al equipo con el que corrió. Los puntos de los equipos se calculan con `getTeamTotalPoints()`.
+
+El estado de cada carrera (`done`, `next`, `upcoming`) se calcula con la fecha de hoy al cargar el sitio.
 
 ## Cargar una carrera nueva
 
 1. Abrí `admin-login.html` e ingresá.
-2. En el panel, pestaña **Resultado de carrera**: elegí la ronda, cargá las 22 posiciones (o traelas con el botón de sincronización) y guardá. Si hubo sprint, cargalo en la pestaña **Sprint**: queda pendiente hasta que guardes la carrera.
+2. En el panel, pestaña **Resultado de carrera**: elegí la ronda, cargá las posiciones de todos los que corrieron (al menos 20, sin saltos; dejá en blanco a quien no corrió) o traelas con el botón de sincronización, y guardá. Si hubo sprint, cargalo en la pestaña **Sprint**: queda pendiente hasta que guardes la carrera.
 3. **Exportá `data.js`** (o publicalo directo a GitHub desde el panel).
 4. Antes de subir los cambios, corré el chequeo:
 
